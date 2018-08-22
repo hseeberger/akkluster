@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  acuar:
+    image: hseeberger/akka-cluster-up-and-running:latest
+    command: [
+    ]
+    ports:
+      - 80
+      - 8558
+    cap_add:
+      - NET_ADMIN
