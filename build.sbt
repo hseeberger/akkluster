@@ -38,7 +38,7 @@ lazy val `akka-cluster-up-and-running` =
 lazy val library =
   new {
     object Version {
-      val akka           = "2.5.14"
+      val akka           = "2.5.15"
       val akkaHttp       = "10.1.4"
       val akkaHttpJson   = "1.21.0"
       val akkaManagement = "0.16.0" // 0.17.0 requires async-dns and does not work, see https://github.com/akka/akka-management/issues/257
@@ -46,7 +46,7 @@ lazy val library =
       val disruptor      = "3.4.2"
       val log4j          = "2.11.1"
       val log4jApiScala  = "11.0"
-      val pureConfig     = "0.9.1"
+      val pureConfig     = "0.9.2"
       val scalaCheck     = "1.14.0"
       val utest          = "0.6.4"
     }
