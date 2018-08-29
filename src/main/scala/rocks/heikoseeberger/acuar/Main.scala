@@ -16,19 +16,20 @@
 
 package rocks.heikoseeberger.acuar
 
+import akka.actor.typed.{ ActorSystem, Behavior }
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter.TypedActorSystemOps
-import akka.actor.typed.{ ActorSystem, Behavior }
 import akka.cluster.typed.{ Cluster, SelfUp, Subscribe }
 import akka.management.AkkaManagement
 import akka.management.cluster.bootstrap.ClusterBootstrap
+import akka.stream.typed.scaladsl.ActorMaterializer
 import org.apache.logging.log4j.core.async.AsyncLoggerContextSelector
 import org.apache.logging.log4j.scala.Logging
 import pureconfig.loadConfigOrThrow
 
 object Main extends Logging {
 
-  private final case class Config()
+  private final case class Config(api: Api.Config)
 
   def main(args: Array[String]): Unit = {
     sys.props += "log4j2.contextSelector" -> classOf[AsyncLoggerContextSelector].getName // Always use async logging!
@@ -48,6 +49,7 @@ object Main extends Logging {
       Behaviors
         .receive[SelfUp] { (context, _) =>
           context.log.info("{} joined cluster and is up", context.system.name)
+          Api(config.api)(context.system.toUntyped, ActorMaterializer()(context.system))
           Behaviors.empty
         }
     }
