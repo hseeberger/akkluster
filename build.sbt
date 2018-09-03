@@ -38,7 +38,7 @@ lazy val `akka-cluster-up-and-running` =
 lazy val library =
   new {
     object Version {
-      val akka           = "2.5.15"
+      val akka           = "2.5.16"
       val akkaHttp       = "10.1.4"
       val akkaHttpJson   = "1.21.0"
       val akkaManagement = "0.16.0" // 0.17.0 requires async-dns and does not work, see https://github.com/akka/akka-management/issues/257
@@ -114,7 +114,7 @@ lazy val dockerSettings =
     Docker / daemonUser := "root",
     Docker / maintainer := "Heiko Seeberger",
     Docker / version := "latest",
-    dockerBaseImage := "hseeberger/openjdk-iptables:10.0.2",
+    dockerBaseImage := "hseeberger/openjdk-iptables:8u181-slim",
     dockerExposedPorts := Seq(80, 8558),
     dockerRepository := Some("hseeberger")
   )
