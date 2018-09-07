@@ -39,7 +39,7 @@ lazy val library =
   new {
     object Version {
       val akka           = "2.5.16"
-      val akkaHttp       = "10.1.4"
+      val akkaHttp       = "10.1.5"
       val akkaHttpJson   = "1.21.0"
       val akkaManagement = "0.16.0" // 0.17.0 requires async-dns and does not work, see https://github.com/akka/akka-management/issues/257
       val circe          = "0.9.3"
