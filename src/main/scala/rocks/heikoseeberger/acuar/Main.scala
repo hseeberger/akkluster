@@ -51,7 +51,8 @@ object Main {
         context.log.info("{} joined cluster and is up", context.system.name)
 
         cluster.subscriptions ! Unsubscribe(context.self)
-        Api(config.api, cluster)(context.system.toUntyped, ActorMaterializer()(context.system))
+        Api(config.api, cluster.subscriptions)(context.system.toUntyped,
+                                               ActorMaterializer()(context.system))
 
         Behaviors.empty
       }

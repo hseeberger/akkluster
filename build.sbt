@@ -26,6 +26,7 @@ lazy val `akka-cluster-up-and-running` =
         library.pureConfig,
         library.akkaHttpTestkit       % Test,
         library.akkaActorTestkitTyped % Test,
+        library.mockitoInline         % Test,
         library.scalaCheck            % Test,
         library.utest                 % Test
       )
@@ -46,6 +47,7 @@ lazy val library =
       val disruptor      = "3.4.2"
       val log4j          = "2.11.1"
       val log4jApiScala  = "11.0"
+      val mockito        = "2.22.0"
       val pureConfig     = "0.9.2"
       val scalaCheck     = "1.14.0"
       val utest          = "0.6.4"
@@ -66,6 +68,7 @@ lazy val library =
     val log4jApiScala            = "org.apache.logging.log4j"      %% "log4j-api-scala"                   % Version.log4jApiScala
     val log4jCore                = "org.apache.logging.log4j"      %  "log4j-core"                        % Version.log4j
     val log4jSlf4j               = "org.apache.logging.log4j"      %  "log4j-slf4j-impl"                  % Version.log4j
+    val mockitoInline            = "org.mockito"                   %  "mockito-inline"                    % Version.mockito
     val pureConfig               = "com.github.pureconfig"         %% "pureconfig"                        % Version.pureConfig
     val scalaCheck               = "org.scalacheck"                %% "scalacheck"                        % Version.scalaCheck
     val utest                    = "com.lihaoyi"                   %% "utest"                             % Version.utest

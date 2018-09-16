@@ -17,7 +17,8 @@
 package rocks.heikoseeberger.acuar
 
 import akka.actor.{ ActorSystem, CoordinatedShutdown }
-import akka.cluster.typed.Cluster
+import akka.actor.typed.ActorRef
+import akka.cluster.typed.ClusterStateSubscription
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
@@ -35,8 +36,10 @@ object Api {
 
   private final object BindFailure extends CoordinatedShutdown.Reason
 
-  def apply(config: Config, cluster: Cluster)(implicit untypedSystem: ActorSystem,
-                                              mat: Materializer): Unit = {
+  def apply(
+      config: Config,
+      subscriptions: ActorRef[ClusterStateSubscription]
+  )(implicit untypedSystem: ActorSystem, mat: Materializer): Unit = {
     import config._
     import untypedSystem.dispatcher
 
@@ -44,7 +47,7 @@ object Api {
     val shutdown = CoordinatedShutdown(untypedSystem)
 
     Http()
-      .bindAndHandle(route(config, cluster), address, port)
+      .bindAndHandle(route(config, subscriptions), address, port)
       .onComplete {
         case Failure(cause) =>
           log.error(cause, "Shutting down, because cannot bind to {}:{}!", address, port)
@@ -58,7 +61,7 @@ object Api {
       }
   }
 
-  def route(config: Config, cluster: Cluster): Route = {
+  def route(config: Config, subscriptions: ActorRef[ClusterStateSubscription]): Route = {
     import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
     import akka.http.scaladsl.server.Directives._
     import config._
@@ -73,7 +76,7 @@ object Api {
     path("cluster" / "events") {
       get {
         complete {
-          ClusterEvents(clusterEventsBufferSize, clusterEventsKeepAlive, cluster)
+          ClusterEvents(clusterEventsBufferSize, clusterEventsKeepAlive, subscriptions)
         }
       }
     }

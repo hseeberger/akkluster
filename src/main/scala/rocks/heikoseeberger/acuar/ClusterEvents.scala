@@ -21,6 +21,7 @@ import akka.stream.typed.scaladsl.ActorSource
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Source
 import akka.NotUsed
+import akka.actor.typed.ActorRef
 import akka.cluster.ClusterEvent.{
   ClusterDomainEvent,
   MemberEvent,
@@ -35,7 +36,7 @@ import akka.cluster.ClusterEvent.{
   UnreachableMember
 }
 import akka.cluster.Member
-import akka.cluster.typed.{ Cluster, Subscribe }
+import akka.cluster.typed.{ ClusterStateSubscription, Subscribe }
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.{ ClassTag, classTag }
 
@@ -43,25 +44,25 @@ object ClusterEvents {
 
   def apply(bufferSize: Int,
             keepAlive: FiniteDuration,
-            cluster: Cluster): Source[ServerSentEvent, NotUsed] = {
-    val memberEvents =
-      subscribe[MemberEvent](bufferSize, cluster).map(toServerSentEvent)
-    val reachabilityEvents =
-      subscribe[ReachabilityEvent](bufferSize, cluster).map(toServerSentEvent)
-    val events = memberEvents.merge(reachabilityEvents, eagerComplete = true)
-
+            subscriptions: ActorRef[ClusterStateSubscription]): Source[ServerSentEvent, NotUsed] = {
+    val memberEvents       = subscribe[MemberEvent](bufferSize, subscriptions).map(toSse)
+    val reachabilityEvents = subscribe[ReachabilityEvent](bufferSize, subscriptions).map(toSse)
+    val events             = memberEvents.merge(reachabilityEvents, eagerComplete = true)
     events.keepAlive(keepAlive, () => ServerSentEvent.heartbeat)
   }
 
-  private def subscribe[A <: ClusterDomainEvent: ClassTag](bufferSize: Int, cluster: Cluster) =
+  private def subscribe[A <: ClusterDomainEvent: ClassTag](
+      bufferSize: Int,
+      subscriptions: ActorRef[ClusterStateSubscription]
+  ) =
     ActorSource
       .actorRef[A](PartialFunction.empty, PartialFunction.empty, bufferSize, OverflowStrategy.fail)
       .mapMaterializedValue { ref =>
-        cluster.subscriptions ! Subscribe(ref, classTag[A].runtimeClass.asInstanceOf[Class[A]])
+        subscriptions ! Subscribe(ref, classTag[A].runtimeClass.asInstanceOf[Class[A]])
         NotUsed
       }
 
-  private def toServerSentEvent(event: MemberEvent) =
+  private def toSse(event: MemberEvent) =
     event match {
       case MemberJoined(member)     => ServerSentEvent(addr(member), "member-joined")
       case MemberWeaklyUp(member)   => ServerSentEvent(addr(member), "member-weakly-up")
@@ -71,12 +72,11 @@ object ClusterEvents {
       case MemberRemoved(member, _) => ServerSentEvent(addr(member), "member-removed")
     }
 
-  private def toServerSentEvent(event: ReachabilityEvent) =
+  private def toSse(event: ReachabilityEvent) =
     event match {
       case UnreachableMember(member) => ServerSentEvent(addr(member), "unreachable-member")
       case ReachableMember(member)   => ServerSentEvent(addr(member), "reachable-member")
     }
 
   private def addr(member: Member) = member.uniqueAddress.address.toString
-
 }
