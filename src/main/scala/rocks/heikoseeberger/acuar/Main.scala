@@ -43,15 +43,17 @@ object Main {
   def apply(config: Config): Behavior[SelfUp] =
     Behaviors.setup { context =>
       context.log.info("{} started and ready to join cluster", context.system.name)
+
       val cluster = Cluster(context.system)
       cluster.subscriptions ! Subscribe(context.self, classOf[SelfUp])
 
-      Behaviors
-        .receive { (context, _) =>
-          context.log.info("{} joined cluster and is up", context.system.name)
-          cluster.subscriptions ! Unsubscribe(context.self)
-          Api(config.api, cluster)(context.system.toUntyped, ActorMaterializer()(context.system))
-          Behaviors.empty
-        }
+      Behaviors.receive { (context, _) =>
+        context.log.info("{} joined cluster and is up", context.system.name)
+
+        cluster.subscriptions ! Unsubscribe(context.self)
+        Api(config.api, cluster)(context.system.toUntyped, ActorMaterializer()(context.system))
+
+        Behaviors.empty
+      }
     }
 }

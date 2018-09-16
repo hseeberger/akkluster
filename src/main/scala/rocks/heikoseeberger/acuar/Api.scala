@@ -17,24 +17,12 @@
 package rocks.heikoseeberger.acuar
 
 import akka.actor.{ ActorSystem, CoordinatedShutdown }
-import akka.cluster.typed.{ Cluster, Subscribe }
-import akka.cluster.ClusterEvent.{
-  MemberEvent,
-  MemberJoined,
-  MemberUp,
-  ReachabilityEvent,
-  ReachableMember,
-  UnreachableMember
-}
+import akka.cluster.typed.Cluster
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.http.scaladsl.server.Route
-import akka.stream.{ Materializer, OverflowStrategy }
-import akka.stream.typed.scaladsl.ActorSource
-import akka.NotUsed
-import akka.cluster.Member
+import akka.stream.Materializer
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{ Failure, Success }
 
@@ -85,52 +73,9 @@ object Api {
     path("cluster" / "events") {
       get {
         complete {
-          val memberEvents =
-            subscribeToMemberEvents(clusterEventsBufferSize, cluster).map(toServerSentEvent)
-          val reachabilityEvents =
-            subscribeToReachabilityEvents(clusterEventsBufferSize, cluster).map(toServerSentEvent)
-
-          val events = memberEvents.merge(reachabilityEvents, eagerComplete = true)
-
-          events.keepAlive(clusterEventsKeepAlive, () => ServerSentEvent.heartbeat)
+          ClusterEvents(clusterEventsBufferSize, clusterEventsKeepAlive, cluster)
         }
       }
     }
   }
-
-  private def subscribeToMemberEvents(bufferSize: Int, cluster: Cluster) =
-    ActorSource
-      .actorRef[MemberEvent](PartialFunction.empty,
-                             PartialFunction.empty,
-                             bufferSize,
-                             OverflowStrategy.fail)
-      .mapMaterializedValue { ref =>
-        cluster.subscriptions ! Subscribe(ref, classOf[MemberEvent])
-        NotUsed
-      }
-
-  private def subscribeToReachabilityEvents(bufferSize: Int, cluster: Cluster) =
-    ActorSource
-      .actorRef[ReachabilityEvent](PartialFunction.empty,
-                                   PartialFunction.empty,
-                                   bufferSize,
-                                   OverflowStrategy.fail)
-      .mapMaterializedValue { ref =>
-        cluster.subscriptions ! Subscribe(ref, classOf[ReachabilityEvent])
-        NotUsed
-      }
-
-  private def toServerSentEvent(event: MemberEvent) =
-    event match {
-      case MemberJoined(member) => ServerSentEvent(addr(member), "member-joined")
-      case MemberUp(member)     => ServerSentEvent(addr(member), "member-up")
-    }
-
-  private def toServerSentEvent(event: ReachabilityEvent) =
-    event match {
-      case UnreachableMember(member) => ServerSentEvent(addr(member), "unreachable-member")
-      case ReachableMember(member)   => ServerSentEvent(addr(member), "Reachable-member")
-    }
-
-  private def addr(member: Member) = member.uniqueAddress.address.toString
 }
