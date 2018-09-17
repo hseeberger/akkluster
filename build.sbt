@@ -20,7 +20,6 @@ lazy val `akka-cluster-up-and-running` =
         library.circeGeneric,
         library.disruptor,
         library.log4jApi,
-        library.log4jApiScala,
         library.log4jCore,
         library.log4jSlf4j,
         library.pureConfig,
@@ -65,7 +64,6 @@ lazy val library =
     val circeGeneric             = "io.circe"                      %% "circe-generic"                     % Version.circe
     val disruptor                = "com.lmax"                      %  "disruptor"                         % Version.disruptor
     val log4jApi                 = "org.apache.logging.log4j"      %  "log4j-api"                         % Version.log4j
-    val log4jApiScala            = "org.apache.logging.log4j"      %% "log4j-api-scala"                   % Version.log4jApiScala
     val log4jCore                = "org.apache.logging.log4j"      %  "log4j-core"                        % Version.log4j
     val log4jSlf4j               = "org.apache.logging.log4j"      %  "log4j-slf4j-impl"                  % Version.log4j
     val mockitoInline            = "org.mockito"                   %  "mockito-inline"                    % Version.mockito
