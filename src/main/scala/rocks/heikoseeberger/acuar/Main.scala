@@ -16,6 +16,7 @@
 
 package rocks.heikoseeberger.acuar
 
+import akka.actor.{ ActorSystem => UntypedSystem }
 import akka.actor.typed.{ ActorSystem, Behavior }
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter.TypedActorSystemOps
@@ -23,6 +24,7 @@ import akka.cluster.typed.{ Cluster, SelfUp, Subscribe, Unsubscribe }
 import akka.management.AkkaManagement
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.stream.typed.scaladsl.ActorMaterializer
+import akka.stream.Materializer
 import org.apache.logging.log4j.core.async.AsyncLoggerContextSelector
 import pureconfig.loadConfigOrThrow
 
@@ -51,8 +53,11 @@ object Main {
         context.log.info("{} joined cluster and is up", context.system.name)
 
         cluster.subscriptions ! Unsubscribe(context.self)
-        Api(config.api, cluster.subscriptions)(context.system.toUntyped,
-                                               ActorMaterializer()(context.system))
+
+        implicit val untypedSystem: UntypedSystem = context.system.toUntyped
+        implicit val mat: Materializer            = ActorMaterializer()(context.system)
+
+        Api(config.api, cluster.subscriptions)
 
         Behaviors.empty
       }
