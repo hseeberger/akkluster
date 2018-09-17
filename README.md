@@ -1,6 +1,19 @@
-# akka-cluster-up-and-running #
+# Akka Cluster up and running #
 
-Welcome to akka-cluster-up-and-running!
+Bla bla bla ... ;-)
+
+To make a node unavailable:
+
+```bash
+docker exec -i -t <???> bash
+iptables -A INPUT -p tcp --dport 25520 -j DROP
+```
+
+To make a node available again:
+
+```bash
+iptables -D INPUT -p tcp --dport 25520 -j DROP
+```
 
 ## Contribution policy ##
 
