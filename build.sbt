@@ -2,7 +2,7 @@
 // Projects
 // *****************************************************************************
 
-lazy val `akka-cluster-up-and-running` =
+lazy val `akkluster` =
   project
     .in(file("."))
     .enablePlugins(AutomateHeaderPlugin, DockerPlugin, JavaAppPackaging)
@@ -12,12 +12,14 @@ lazy val `akka-cluster-up-and-running` =
         library.akkaClusterBootstrap,
         library.akkaClusterHttp,
         library.akkaClusterShardingTyped,
-        library.akkaDiscoveryDns,
+        library.akkaDiscoveryConfig, // For running locally only!
+        library.akkaDiscoveryK8s,
         library.akkaHttp,
         library.akkaHttpCirce,
         library.akkaSlf4j,
         library.akkaStreamTyped,
         library.circeGeneric,
+        library.circeParser,
         library.disruptor,
         library.log4jApi,
         library.log4jCore,
@@ -47,7 +49,7 @@ lazy val library =
       val disruptor      = "3.4.2"
       val log4j          = "2.11.1"
       val log4jApiScala  = "11.0"
-      val mockito        = "2.22.0"
+      val mockito        = "2.23.0"
       val pureConfig     = "0.9.2"
       val scalaCheck     = "1.14.0"
       val utest          = "0.6.6"
@@ -56,7 +58,8 @@ lazy val library =
     val akkaClusterBootstrap     = "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % Version.akkaManagement
     val akkaClusterHttp          = "com.lightbend.akka.management" %% "akka-management-cluster-http"      % Version.akkaManagement
     val akkaClusterShardingTyped = "com.typesafe.akka"             %% "akka-cluster-sharding-typed"       % Version.akka
-    val akkaDiscoveryDns         = "com.lightbend.akka.discovery"  %% "akka-discovery-dns"                % Version.akkaManagement
+    val akkaDiscoveryConfig      = "com.lightbend.akka.discovery"  %% "akka-discovery-config"             % Version.akkaManagement
+    val akkaDiscoveryK8s         = "com.lightbend.akka.discovery"  %% "akka-discovery-kubernetes-api"     % Version.akkaManagement
     val akkaHttp                 = "com.typesafe.akka"             %% "akka-http"                         % Version.akkaHttp
     val akkaHttpCirce            = "de.heikoseeberger"             %% "akka-http-circe"                   % Version.akkaHttpJson
     val akkaHttpTestkit          = "com.typesafe.akka"             %% "akka-http-testkit"                 % Version.akkaHttp
@@ -64,6 +67,7 @@ lazy val library =
     val akkaStreamTestkit        = "com.typesafe.akka"             %% "akka-stream-testkit"               % Version.akka
     val akkaStreamTyped          = "com.typesafe.akka"             %% "akka-stream-typed"                 % Version.akka
     val circeGeneric             = "io.circe"                      %% "circe-generic"                     % Version.circe
+    val circeParser              = "io.circe"                      %% "circe-parser"                      % Version.circe
     val disruptor                = "com.lmax"                      %  "disruptor"                         % Version.disruptor
     val log4jApi                 = "org.apache.logging.log4j"      %  "log4j-api"                         % Version.log4j
     val log4jCore                = "org.apache.logging.log4j"      %  "log4j-core"                        % Version.log4j
@@ -118,7 +122,7 @@ lazy val dockerSettings =
     Docker / maintainer := "Heiko Seeberger",
     Docker / version := "latest",
     dockerBaseImage := "hseeberger/openjdk-iptables:8u181-slim",
-    dockerExposedPorts := Seq(80, 8558),
+    dockerExposedPorts := Seq(80, 8558, 25520),
     dockerRepository := Some("hseeberger")
   )
 
@@ -127,21 +131,25 @@ lazy val commandAliases =
     "r0",
     """|reStart
        |---
-       |-Dacuar.api.port=8080
+       |-Dakkluster.api.port=8080
+       |-Dakka.cluster.seed-nodes.0=akka://akkluster@127.0.0.1:25520
+       |-Dakka.discovery.method=config
        |-Dakka.management.http.hostname=127.0.0.1
        |-Dakka.management.http.port=8558
        |-Dakka.remote.artery.canonical.hostname=127.0.0.1
        |-Dakka.remote.artery.canonical.port=25520
-       |-Dakka.cluster.seed-nodes.0=akka://acuar@127.0.0.1:25520""".stripMargin
+       |""".stripMargin
   ) ++
   addCommandAlias(
     "r1",
     """|reStart
        |---
-       |-Dacuar.api.port=8081
+       |-Dakkluster.api.port=8081
+       |-Dakka.cluster.seed-nodes.0=akka://akkluster@127.0.0.1:25520
+       |-Dakka.discovery.method=config
        |-Dakka.management.http.hostname=127.0.0.1
        |-Dakka.management.http.port=8559
        |-Dakka.remote.artery.canonical.hostname=127.0.0.1
        |-Dakka.remote.artery.canonical.port=25521
-       |-Dakka.cluster.seed-nodes.0=akka://acuar@127.0.0.1:25520""".stripMargin
+       |""".stripMargin
  )

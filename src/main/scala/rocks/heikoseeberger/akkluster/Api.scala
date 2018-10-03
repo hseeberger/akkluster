@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package rocks.heikoseeberger.acuar
+package rocks.heikoseeberger.akkluster
 
 import akka.actor.{ ActorSystem, CoordinatedShutdown }
 import akka.actor.typed.ActorRef
 import akka.cluster.typed.ClusterStateSubscription
 import akka.event.Logging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ StatusCodes, Uri }
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
+import akka.Done
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{ Failure, Success }
 
@@ -31,8 +32,8 @@ object Api {
 
   final case class Config(address: String,
                           port: Int,
-                          clusterEventsBufferSize: Int,
-                          clusterEventsKeepAlive: FiniteDuration)
+                          terminationDeadline: FiniteDuration,
+                          clusterEvents: ClusterEvents.Config)
 
   private final object BindFailure extends CoordinatedShutdown.Reason
 
@@ -56,7 +57,7 @@ object Api {
         case Success(binding) =>
           log.info("Listening for HTTP connections on {}", binding.localAddress)
           shutdown.addTask(CoordinatedShutdown.PhaseServiceUnbind, "api.unbind") { () =>
-            binding.unbind()
+            binding.terminate(terminationDeadline).map(_ => Done)
           }
       }
   }
@@ -64,19 +65,17 @@ object Api {
   def route(config: Config, subscriptions: ActorRef[ClusterStateSubscription]): Route = {
     import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
     import akka.http.scaladsl.server.Directives._
-    import config._
 
     pathSingleSlash {
       get {
-        complete {
-          StatusCodes.OK
-        }
+        redirect(Uri("/index.html"), StatusCodes.PermanentRedirect)
       }
     } ~
-    path("cluster" / "events") {
+    getFromResourceDirectory("web") ~
+    path("events") {
       get {
         complete {
-          ClusterEvents(clusterEventsBufferSize, clusterEventsKeepAlive, subscriptions)
+          ClusterEvents(config.clusterEvents, subscriptions)
         }
       }
     }

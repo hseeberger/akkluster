@@ -16,7 +16,7 @@
 
 package rocks.heikoseeberger
 
-package object acuar {
+package object akkluster {
 
   type Traversable[+A] = scala.collection.immutable.Traversable[A]
   type Iterable[+A]    = scala.collection.immutable.Iterable[A]

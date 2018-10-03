@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package rocks.heikoseeberger.acuar
+package rocks.heikoseeberger.akkluster
 
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.testkit.typed.FishingOutcome
@@ -43,13 +43,16 @@ import scala.concurrent.duration.DurationInt
 import utest._
 
 object ClusterEventsTests extends ActorTestSuite {
+  import ClusterEvents._
   import testkit._
+
+  private val config = Config(42, 42.seconds)
 
   override def tests: Tests =
     Tests {
       'subscribe - {
         val subscriptions = TestProbe[ClusterStateSubscription]()
-        ClusterEvents(42, 42.seconds, subscriptions.ref).runWith(Sink.ignore)
+        ClusterEvents(config, subscriptions.ref).runWith(Sink.ignore)
         subscriptions.fishForMessage(3.seconds) {
           case Subscribe(_, c) if c == classOf[MemberEvent]       => FishingOutcome.Continue
           case Subscribe(_, c) if c == classOf[ReachabilityEvent] => FishingOutcome.Complete
@@ -72,7 +75,7 @@ object ClusterEventsTests extends ActorTestSuite {
               reachabilityEvents.runForeach(s.!)
               Behaviors.same
           })
-        val events = ClusterEvents(42, 42.seconds, subscriptions).take(8).runWith(Sink.seq)
+        val events = ClusterEvents(config, subscriptions).take(8).runWith(Sink.seq)
 
         val member = Mockito.mock(classOf[Member])
         Mockito.when(member.uniqueAddress).thenReturn(UniqueAddress(Address("akka", "test"), 1L))

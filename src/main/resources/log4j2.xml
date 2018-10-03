@@ -16,14 +16,14 @@
     </Appenders>
 
     <Loggers>
-        <Logger name="rocks.heikoseeberger.acuar" level="${sys:loglevel.acuar:-debug}" additivity="false">
+        <Logger name="rocks.heikoseeberger.akkluster" level="${sys:loglevel.akkluster:-debug}" additivity="false">
             <AppenderRef ref="stdout"/>
         </Logger>
-        <Logger name="akka.actor.typed.Behavior" level="${sys:loglevel.acuar:-debug}" additivity="false">
+        <Logger name="akka.actor.typed.Behavior" level="${sys:loglevel.akkluster:-debug}" additivity="false">
             <AppenderRef ref="stdout-behavior"/>
         </Logger>
 
-        <Root level="${sys:loglevel.root:-warn}">
+        <Root level="${sys:loglevel.root:-error}">
             <AppenderRef ref="stdout"/>
         </Root>
     </Loggers>

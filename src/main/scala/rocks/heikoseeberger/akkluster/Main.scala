@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package rocks.heikoseeberger.acuar
+package rocks.heikoseeberger.akkluster
 
 import akka.actor.{ ActorSystem => UntypedSystem }
 import akka.actor.typed.{ ActorSystem, Behavior }
@@ -35,8 +35,8 @@ object Main {
   def main(args: Array[String]): Unit = {
     sys.props += "log4j2.contextSelector" -> classOf[AsyncLoggerContextSelector].getName // Always use async logging!
 
-    val config = loadConfigOrThrow[Config]("acuar") // Must be first to aviod creating the actor system on failure!
-    val system = ActorSystem(Main(config), "acuar")
+    val config = loadConfigOrThrow[Config]("akkluster") // Must be first to aviod creating the actor system on failure!
+    val system = ActorSystem(Main(config), "akkluster")
 
     AkkaManagement(system.toUntyped).start()
     ClusterBootstrap(system.toUntyped).start()

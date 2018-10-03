@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: akkluster-http
+spec:
+  selector:
+    app: akkluster
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+
+---
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: akkluster
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: akkluster
+      labels:
+        app: akkluster
+    spec:
+      containers:
+      - name: akkluster
+        image: hseeberger/akkluster:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 80
+        - name: akka-mgmt-http
+          containerPort: 8558
+        - name: akka-remote
+          containerPort: 25520
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+subjects:
+- kind: User
+  name: system:serviceaccount:default:default
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io

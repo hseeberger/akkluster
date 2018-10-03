@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package rocks.heikoseeberger.acuar
+package rocks.heikoseeberger.akkluster
 
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.stream.Materializer

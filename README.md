@@ -2,10 +2,16 @@
 
 Bla bla bla ... ;-)
 
-To make a node unavailable:
+To make a node unavailable, first run the containers with NET_ADMIN capabilities:
 
 ```bash
-docker exec -i -t <???> bash
+docker run --detach --cap-add NET_ADMIN ...
+```
+
+Then connect to a running container and block traffic:
+
+```bash
+docker exec -i -t ... bash
 iptables -A INPUT -p tcp --dport 25520 -j DROP
 ```
 
