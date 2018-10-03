@@ -23,8 +23,9 @@ lazy val `akka-cluster-up-and-running` =
         library.log4jCore,
         library.log4jSlf4j,
         library.pureConfig,
-        library.akkaHttpTestkit       % Test,
         library.akkaActorTestkitTyped % Test,
+        library.akkaHttpTestkit       % Test,
+        library.akkaStreamTestkit     % Test,
         library.mockitoInline         % Test,
         library.scalaCheck            % Test,
         library.utest                 % Test
@@ -38,19 +39,20 @@ lazy val `akka-cluster-up-and-running` =
 lazy val library =
   new {
     object Version {
-      val akka           = "2.5.16"
+      val akka           = "2.5.17"
       val akkaHttp       = "10.1.5"
-      val akkaHttpJson   = "1.21.0"
-      val akkaManagement = "0.16.0" // 0.17.0 requires async-dns and does not work, see https://github.com/akka/akka-management/issues/257
-      val circe          = "0.9.3"
+      val akkaHttpJson   = "1.22.0"
+      val akkaManagement = "0.18.0"
+      val circe          = "0.10.0"
       val disruptor      = "3.4.2"
       val log4j          = "2.11.1"
       val log4jApiScala  = "11.0"
       val mockito        = "2.22.0"
       val pureConfig     = "0.9.2"
       val scalaCheck     = "1.14.0"
-      val utest          = "0.6.4"
+      val utest          = "0.6.6"
     }
+    val akkaActorTestkitTyped    = "com.typesafe.akka"             %% "akka-actor-testkit-typed"          % Version.akka
     val akkaClusterBootstrap     = "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % Version.akkaManagement
     val akkaClusterHttp          = "com.lightbend.akka.management" %% "akka-management-cluster-http"      % Version.akkaManagement
     val akkaClusterShardingTyped = "com.typesafe.akka"             %% "akka-cluster-sharding-typed"       % Version.akka
@@ -59,8 +61,8 @@ lazy val library =
     val akkaHttpCirce            = "de.heikoseeberger"             %% "akka-http-circe"                   % Version.akkaHttpJson
     val akkaHttpTestkit          = "com.typesafe.akka"             %% "akka-http-testkit"                 % Version.akkaHttp
     val akkaSlf4j                = "com.typesafe.akka"             %% "akka-slf4j"                        % Version.akka
+    val akkaStreamTestkit        = "com.typesafe.akka"             %% "akka-stream-testkit"               % Version.akka
     val akkaStreamTyped          = "com.typesafe.akka"             %% "akka-stream-typed"                 % Version.akka
-    val akkaActorTestkitTyped    = "com.typesafe.akka"             %% "akka-actor-testkit-typed"          % Version.akka
     val circeGeneric             = "io.circe"                      %% "circe-generic"                     % Version.circe
     val disruptor                = "com.lmax"                      %  "disruptor"                         % Version.disruptor
     val log4jApi                 = "org.apache.logging.log4j"      %  "log4j-api"                         % Version.log4j
@@ -84,7 +86,7 @@ lazy val settings =
 
 lazy val commonSettings =
   Seq(
-    scalaVersion := "2.12.6",
+    scalaVersion := "2.12.7",
     organization := "rocks.heikoseeberger",
     organizationName := "Heiko Seeberger",
     startYear := Some(2018),

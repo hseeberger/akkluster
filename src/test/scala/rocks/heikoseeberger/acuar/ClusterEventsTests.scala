@@ -16,10 +16,10 @@
 
 package rocks.heikoseeberger.acuar
 
-import akka.actor.testkit.typed.scaladsl.{ ActorTestKit, TestProbe }
+import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.testkit.typed.FishingOutcome
-import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.ActorRef
+import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.Address
 import akka.cluster.{ Member, MemberStatus, UniqueAddress }
 import akka.cluster.typed.{ ClusterStateSubscription, Subscribe }
@@ -36,21 +36,14 @@ import akka.cluster.ClusterEvent.{
   UnreachableMember
 }
 import akka.http.scaladsl.model.sse.ServerSentEvent
-import akka.stream.{ Materializer, OverflowStrategy }
+import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{ Sink, Source }
-import akka.stream.typed.scaladsl.ActorMaterializer
 import org.mockito.Mockito
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.ExecutionContext
 import utest._
 
-object ClusterEventsTests extends TestSuite with ActorTestKit {
-
-  private implicit val mat: Materializer =
-    ActorMaterializer()
-
-  private implicit val ec: ExecutionContext =
-    system.executionContext
+object ClusterEventsTests extends ActorTestSuite {
+  import testkit._
 
   override def tests: Tests =
     Tests {
