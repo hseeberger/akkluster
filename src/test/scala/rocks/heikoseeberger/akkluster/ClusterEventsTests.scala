@@ -21,7 +21,7 @@ import akka.actor.testkit.typed.FishingOutcome
 import akka.actor.typed.ActorRef
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.Address
-import akka.cluster.{ Member, MemberStatus, UniqueAddress }
+import akka.cluster.{ Member, MemberStatus }
 import akka.cluster.typed.{ ClusterStateSubscription, Subscribe }
 import akka.cluster.ClusterEvent.{
   MemberEvent,
@@ -78,19 +78,35 @@ object ClusterEventsTests extends ActorTestSuite {
         val events = ClusterEvents(config, subscriptions).take(8).runWith(Sink.seq)
 
         val member = Mockito.mock(classOf[Member])
-        Mockito.when(member.uniqueAddress).thenReturn(UniqueAddress(Address("akka", "test"), 1L))
+        Mockito.when(member.address).thenReturn(Address("akka", "test", "127.0.0.1", 25520))
         Mockito.when(member.status).thenReturn(MemberStatus.Joining)
 
         val expected =
           List(
-            ServerSentEvent(member.uniqueAddress.address.toString, "member-joined"),
-            ServerSentEvent(member.uniqueAddress.address.toString, "member-weakly-up"),
-            ServerSentEvent(member.uniqueAddress.address.toString, "member-up"),
-            ServerSentEvent(member.uniqueAddress.address.toString, "unreachable-member"),
-            ServerSentEvent(member.uniqueAddress.address.toString, "reachable-member"),
-            ServerSentEvent(member.uniqueAddress.address.toString, "member-left"),
-            ServerSentEvent(member.uniqueAddress.address.toString, "member-exited"),
-            ServerSentEvent(member.uniqueAddress.address.toString, "member-removed")
+            ServerSentEvent(
+              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"joining","label":"A"}"""
+            ),
+            ServerSentEvent(
+              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"weakly-up","label":"A"}"""
+            ),
+            ServerSentEvent(
+              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"up","label":"A"}"""
+            ),
+            ServerSentEvent(
+              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"unreachable","label":"A"}"""
+            ),
+            ServerSentEvent(
+              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"reachable","label":"A"}"""
+            ),
+            ServerSentEvent(
+              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"leaving","label":"A"}"""
+            ),
+            ServerSentEvent(
+              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"exiting","label":"A"}"""
+            ),
+            ServerSentEvent(
+              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"removed","label":"A"}"""
+            ),
           )
 
         for {
