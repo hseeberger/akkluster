@@ -41,16 +41,16 @@ lazy val `akkluster` =
 lazy val library =
   new {
     object Version {
-      val akka           = "2.5.17"
+      val akka           = "2.5.18"
       val akkaHttp       = "10.1.5"
       val akkaHttpJson   = "1.22.0"
       val akkaManagement = "0.18.0"
-      val circe          = "0.10.0"
+      val circe          = "0.10.1"
       val disruptor      = "3.4.2"
       val log4j          = "2.11.1"
       val log4jApiScala  = "11.0"
       val mockito        = "2.23.0"
-      val pureConfig     = "0.9.2"
+      val pureConfig     = "0.10.0"
       val scalaCheck     = "1.14.0"
       val utest          = "0.6.6"
     }

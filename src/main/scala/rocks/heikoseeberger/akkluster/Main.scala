@@ -26,6 +26,7 @@ import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.stream.typed.scaladsl.ActorMaterializer
 import akka.stream.Materializer
 import org.apache.logging.log4j.core.async.AsyncLoggerContextSelector
+import pureconfig.generic.auto.exportReader
 import pureconfig.loadConfigOrThrow
 
 object Main {

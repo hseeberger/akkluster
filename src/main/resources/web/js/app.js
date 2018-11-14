@@ -16,7 +16,7 @@ function onload() {
     }
 
     let events = new EventSource('events');
-    events.addEventListener("message", handleEvent , false);
+    events.addEventListener("message", handleEvent, false);
 }
 
 function updateCircles(members) {
@@ -38,12 +38,13 @@ function updateCircles(members) {
 
 function statusToColor(status, n) {
     console.log(n + ": " + status);
-    return status === "joining" ? "yellow"
-        : status === "weakly-up" ? "orange"
+    return status === "joining" ? "lightblue"
+        : status === "weakly-up" ? "lightgreen"
             : status === "up" ? "green"
-                : status === "leaving" ? "gray"
-                    : status === "exiting" ? "lightgray"
-                        : status === "unreachable" ? "red"
-                            : status === "reachable" ? "green"
-                                : "black";
+                : status === "leaving" ? "yellow"
+                    : status === "exiting" ? "lightyellow"
+                        : status === "down" ? "orange"
+                            : status === "unreachable" ? "red"
+                                : status === "reachable" ? "green"
+                                    : "gray";
 }

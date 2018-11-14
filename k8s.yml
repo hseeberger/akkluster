@@ -13,6 +13,21 @@ spec:
 
 ---
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: akkluster-akka-mgmt-http
+spec:
+  selector:
+    app: akkluster
+  type: NodePort
+  ports:
+    - name: akka-mgmt-http
+      port: 8558
+      targetPort: akka-mgmt-http
+
+---
+
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:

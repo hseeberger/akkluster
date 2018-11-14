@@ -4,7 +4,7 @@ Bla bla bla ... ;-)
 
 To make a node unavailable, first run the containers with NET_ADMIN capabilities:
 
-```bash
+``` bash
 docker run --detach --cap-add NET_ADMIN ...
 ```
 
@@ -19,6 +19,19 @@ To make a node available again:
 
 ```bash
 iptables -D INPUT -p tcp --dport 25520 -j DROP
+```
+
+## On Minikube
+
+``` bash
+minikube start
+kubectl apply -f k8s.yml
+minikube service akkluster-http
+minikube service akkluster-akka-mgmt-http
+kubectl exec -i -t akkluster-... bash
+iptables -A INPUT -p tcp --dport 25520 -j DROP
+iptables -D INPUT -p tcp --dport 25520 -j DROP
+kubectl apply -f k8s.yml
 ```
 
 ## Contribution policy ##

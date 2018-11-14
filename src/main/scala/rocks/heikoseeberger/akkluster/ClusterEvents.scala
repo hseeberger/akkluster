@@ -25,6 +25,7 @@ import akka.actor.typed.ActorRef
 import akka.actor.Address
 import akka.cluster.ClusterEvent.{
   ClusterDomainEvent,
+  MemberDowned,
   MemberEvent,
   MemberExited,
   MemberJoined,
@@ -100,6 +101,7 @@ object ClusterEvents {
       case MemberUp(member)         => ClusterEvent(member.address, "up")
       case MemberLeft(member)       => ClusterEvent(member.address, "leaving")
       case MemberExited(member)     => ClusterEvent(member.address, "exiting")
+      case MemberDowned(member)     => ClusterEvent(member.address, "down")
       case MemberRemoved(member, _) => ClusterEvent(member.address, "removed")
     }
 
