@@ -45,6 +45,7 @@ spec:
         image: hseeberger/akkluster:latest
         imagePullPolicy: IfNotPresent
         args: [
+#          "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
         ]
         ports:
         - name: http
