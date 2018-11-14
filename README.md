@@ -27,7 +27,7 @@ iptables -D INPUT -p tcp --dport 25520 -j DROP
 minikube start
 kubectl apply -f k8s.yml
 minikube service akkluster-http
-minikube service akkluster-akka-mgmt-http
+minikube service akkluster-management
 kubectl exec -i -t akkluster-... bash
 iptables -A INPUT -p tcp --dport 25520 -j DROP
 iptables -D INPUT -p tcp --dport 25520 -j DROP
