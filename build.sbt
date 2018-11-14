@@ -16,6 +16,7 @@ lazy val `akkluster` =
         library.akkaDiscoveryK8s,
         library.akkaHttp,
         library.akkaHttpCirce,
+        library.akkaSbr,
         library.akkaSlf4j,
         library.akkaStreamTyped,
         library.circeGeneric,
@@ -30,7 +31,7 @@ lazy val `akkluster` =
         library.akkaStreamTestkit     % Test,
         library.mockitoInline         % Test,
         library.scalaCheck            % Test,
-        library.utest                 % Test
+        library.utest                 % Test,
       )
     )
 
@@ -45,6 +46,7 @@ lazy val library =
       val akkaHttp       = "10.1.5"
       val akkaHttpJson   = "1.22.0"
       val akkaManagement = "0.19.0"
+      val akkaSbr        = "1.1.4"
       val circe          = "0.10.1"
       val disruptor      = "3.4.2"
       val log4j          = "2.11.1"
@@ -64,6 +66,7 @@ lazy val library =
     val akkaHttpCirce            = "de.heikoseeberger"             %% "akka-http-circe"                   % Version.akkaHttpJson
     val akkaHttpTestkit          = "com.typesafe.akka"             %% "akka-http-testkit"                 % Version.akkaHttp
     val akkaSlf4j                = "com.typesafe.akka"             %% "akka-slf4j"                        % Version.akka
+    val akkaSbr                  = "com.lightbend.akka"            %% "akka-split-brain-resolver"         % Version.akkaSbr
     val akkaStreamTestkit        = "com.typesafe.akka"             %% "akka-stream-testkit"               % Version.akka
     val akkaStreamTyped          = "com.typesafe.akka"             %% "akka-stream-typed"                 % Version.akka
     val circeGeneric             = "io.circe"                      %% "circe-generic"                     % Version.circe
@@ -102,18 +105,18 @@ lazy val commonSettings =
       "-target:jvm-1.8",
       "-encoding", "UTF-8",
       "-Ypartial-unification",
-      "-Ywarn-unused-import"
+      "-Ywarn-unused-import",
     ),
     Compile / unmanagedSourceDirectories := Seq((Compile / scalaSource).value),
     Test / unmanagedSourceDirectories := Seq((Test / scalaSource).value),
     Compile / packageDoc / publishArtifact := false,
     Compile / packageSrc / publishArtifact := false,
-    testFrameworks += new TestFramework("utest.runner.Framework")
+    testFrameworks += new TestFramework("utest.runner.Framework"),
 )
 
 lazy val scalafmtSettings =
   Seq(
-    scalafmtOnCompile := true
+    scalafmtOnCompile := true,
   )
 
 lazy val dockerSettings =
@@ -123,7 +126,7 @@ lazy val dockerSettings =
     Docker / version := "latest",
     dockerBaseImage := "hseeberger/openjdk-iptables:8u181-slim",
     dockerExposedPorts := Seq(80, 8558, 25520),
-    dockerRepository := Some("hseeberger")
+    dockerRepository := Some("hseeberger"),
   )
 
 lazy val commandAliases =

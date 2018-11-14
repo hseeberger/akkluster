@@ -33,7 +33,7 @@ kind: Deployment
 metadata:
   name: akkluster
 spec:
-  replicas: 2
+  replicas: 3
   template:
     metadata:
       name: akkluster
@@ -46,6 +46,9 @@ spec:
         imagePullPolicy: IfNotPresent
         args: [
 #          "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
+          "-Dakka.cluster.downing-provider-class=com.lightbend.akka.sbr.SplitBrainResolverProvider",
+          "-Dakka.cluster.split-brain-resolver.active-strategy=keep-majority",
+          "-Dakka.cluster.split-brain-resolver.stable-after=7seconds"
         ]
         ports:
         - name: http
