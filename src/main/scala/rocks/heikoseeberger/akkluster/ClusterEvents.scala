@@ -56,8 +56,8 @@ object ClusterEvents {
   def apply(config: Config,
             cluster: ActorRef[ClusterStateSubscription]): Source[ServerSentEvent, NotUsed] = {
     import config._
-    import io.circe.syntax._
     import io.circe.generic.auto._
+    import io.circe.syntax._
 
     val memberEvents       = subscribe[MemberEvent](bufferSize, cluster).map(toClusterEvent)
     val reachabilityEvents = subscribe[ReachabilityEvent](bufferSize, cluster).map(toClusterEvent)
@@ -79,7 +79,7 @@ object ClusterEvents {
             }
           List(event.copy(label = label))
       })
-      .map(e => ServerSentEvent(e.asJson.noSpaces))
+      .map(event => ServerSentEvent(event.asJson.noSpaces))
       .keepAlive(keepAlive, () => ServerSentEvent.heartbeat)
   }
 

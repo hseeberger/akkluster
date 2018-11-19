@@ -39,7 +39,7 @@ object Api {
 
   def apply(
       config: Config,
-      subscriptions: ActorRef[ClusterStateSubscription]
+      cluster: ActorRef[ClusterStateSubscription]
   )(implicit untypedSystem: ActorSystem, mat: Materializer): Unit = {
     import config._
     import untypedSystem.dispatcher
@@ -48,7 +48,7 @@ object Api {
     val shutdown = CoordinatedShutdown(untypedSystem)
 
     Http()
-      .bindAndHandle(route(config, subscriptions), address, port)
+      .bindAndHandle(route(config, cluster), address, port)
       .onComplete {
         case Failure(cause) =>
           log.error(cause, "Shutting down, because cannot bind to {}:{}!", address, port)
@@ -62,7 +62,7 @@ object Api {
       }
   }
 
-  def route(config: Config, subscriptions: ActorRef[ClusterStateSubscription]): Route = {
+  def route(config: Config, cluster: ActorRef[ClusterStateSubscription]): Route = {
     import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
     import akka.http.scaladsl.server.Directives._
 
@@ -75,7 +75,7 @@ object Api {
     path("events") {
       get {
         complete {
-          ClusterEvents(config.clusterEvents, subscriptions)
+          ClusterEvents(config.clusterEvents, cluster)
         }
       }
     }
