@@ -5,6 +5,7 @@ metadata:
 spec:
   selector:
     app: akkluster
+    kind: keep-stable
   type: NodePort
   ports:
   - name: http
@@ -31,24 +32,64 @@ spec:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: akkluster
+  name: akkluster-keep-stable
 spec:
-  replicas: 3
+  replicas: 2
   template:
     metadata:
       name: akkluster
       labels:
         app: akkluster
+        kind: keep-stable
     spec:
       containers:
       - name: akkluster
         image: hseeberger/akkluster:latest
         imagePullPolicy: IfNotPresent
         args: [
-#          "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
-          "-Dakka.cluster.downing-provider-class=com.lightbend.akka.sbr.SplitBrainResolverProvider",
-          "-Dakka.cluster.split-brain-resolver.active-strategy=keep-majority",
-          "-Dakka.cluster.split-brain-resolver.stable-after=7seconds"
+          "-Dakka.cluster.roles.0=keep-stable"
+          # "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
+          # "-Dakka.cluster.downing-provider-class=com.lightbend.akka.sbr.SplitBrainResolverProvider",
+          # "-Dakka.cluster.split-brain-resolver.active-strategy=keep-majority",
+          # "-Dakka.cluster.split-brain-resolver.stable-after=7seconds"
+        ]
+        ports:
+        - name: http
+          containerPort: 80
+        - name: management
+          containerPort: 8558
+        - name: akka-remote
+          containerPort: 25520
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+
+---
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: akkluster-dynamic
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: akkluster
+      labels:
+        app: akkluster
+        kind: dynamic
+    spec:
+      containers:
+      - name: akkluster
+        image: hseeberger/akkluster:latest
+        imagePullPolicy: IfNotPresent
+        args: [
+          "-Dakka.cluster.roles.0=dynamic"
+          # "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
+          # "-Dakka.cluster.downing-provider-class=com.lightbend.akka.sbr.SplitBrainResolverProvider",
+          # "-Dakka.cluster.split-brain-resolver.active-strategy=keep-majority",
+          # "-Dakka.cluster.split-brain-resolver.stable-after=7seconds"
         ]
         ports:
         - name: http
