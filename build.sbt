@@ -45,14 +45,14 @@ lazy val library =
       val akka           = "2.5.18"
       val akkaHttp       = "10.1.5"
       val akkaHttpJson   = "1.22.0"
-      val akkaManagement = "0.19.0"
+      val akkaManagement = "0.20.0"
       val akkaSbr        = "1.1.4"
       val circe          = "0.10.1"
       val disruptor      = "3.4.2"
       val log4j          = "2.11.1"
       val log4jApiScala  = "11.0"
-      val mockito        = "2.23.0"
-      val pureConfig     = "0.10.0"
+      val mockito        = "2.23.4"
+      val pureConfig     = "0.10.1"
       val scalaCheck     = "1.14.0"
       val utest          = "0.6.6"
     }
@@ -93,7 +93,7 @@ lazy val settings =
 
 lazy val commonSettings =
   Seq(
-    scalaVersion := "2.12.7",
+    scalaVersion := "2.12.8",
     organization := "rocks.heikoseeberger",
     organizationName := "Heiko Seeberger",
     startYear := Some(2018),
