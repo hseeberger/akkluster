@@ -5,7 +5,7 @@ metadata:
 spec:
   selector:
     app: akkluster
-    kind: keep-stable
+    kind: static
   type: NodePort
   ports:
   - name: http
@@ -32,22 +32,22 @@ spec:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: akkluster-keep-stable
+  name: akkluster-static
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       name: akkluster
       labels:
         app: akkluster
-        kind: keep-stable
+        kind: static
     spec:
       containers:
       - name: akkluster
         image: hseeberger/akkluster:latest
         imagePullPolicy: IfNotPresent
         args: [
-          "-Dakka.cluster.roles.0=keep-stable"
+          "-Dakka.cluster.roles.0=static"
           # "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
           # "-Dakka.cluster.downing-provider-class=com.lightbend.akka.sbr.SplitBrainResolverProvider",
           # "-Dakka.cluster.split-brain-resolver.active-strategy=keep-majority",
@@ -72,7 +72,7 @@ kind: Deployment
 metadata:
   name: akkluster-dynamic
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       name: akkluster

@@ -42,7 +42,7 @@ lazy val `akkluster` =
 lazy val library =
   new {
     object Version {
-      val akka           = "2.5.18"
+      val akka           = "2.5.19"
       val akkaHttp       = "10.1.5"
       val akkaHttpJson   = "1.22.0"
       val akkaManagement = "0.20.0"
