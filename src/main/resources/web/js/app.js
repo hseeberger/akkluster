@@ -1,17 +1,17 @@
 function onload() {
-
+    let selectedMember = d3.select("#selectedMember");
     let members = new Map();
 
     function handleEvent(event) {
         if (event.data !== "") {
-            let clusterEvent = JSON.parse(event.data);
-            console.log(clusterEvent);
-            if (clusterEvent.status === "removed") {
-                members.delete(clusterEvent.label);
+            let {address, status} = JSON.parse(event.data);
+            console.log(address + " is " + status);
+            if (status === "removed") {
+                members.delete(address);
             } else {
-                members.set(clusterEvent.label, clusterEvent.status);
+                members.set(address, status);
             }
-            updateCircles(members);
+            updateCircles(selectedMember, members);
         }
     }
 
@@ -19,25 +19,24 @@ function onload() {
     events.addEventListener("message", handleEvent, false);
 }
 
-function updateCircles(members) {
+function updateCircles(selectedMember, members) {
     let circles = d3.select("svg").selectAll("circle").data(Array.from(members));
 
-    circles
-        .style("fill", ([label, status], n) => statusToColor(status, n));
+    circles.style("fill", ([, status], n) => statusToColor(status, n));
 
     circles.enter()
         .append("circle")
         .attr("r", 20)
         .attr("cy", 60)
         .attr("cx", (member, n) => n * 100 + 30)
-        .style("fill", ([label, status], n) => statusToColor(status, n));
+        .style("fill", ([, status]) => statusToColor(status))
+        .on("click", ([address,]) => selectedMember.text(address));
 
     circles.exit()
         .remove();
 }
 
-function statusToColor(status, n) {
-    console.log(n + ": " + status);
+function statusToColor(status) {
     return status === "joining" ? "lightblue"
         : status === "weakly-up" ? "lightgreen"
             : status === "up" ? "green"

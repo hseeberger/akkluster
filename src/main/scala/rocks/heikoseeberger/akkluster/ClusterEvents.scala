@@ -45,13 +45,11 @@ object ClusterEvents {
 
   final case class Config(bufferSize: Int, keepAlive: FiniteDuration)
 
-  private final case class ClusterEvent(address: Address, status: String, label: String = "")
-
-  private def nextLabel(label: String) =
-    label.last.toUpper match {
-      case 'Z' => label + "A"
-      case c   => label.init + (c + 1).toChar
-    }
+  private final object ClusterEvent {
+    def apply(address: Address, status: String): ClusterEvent =
+      ClusterEvent(address.toString, status)
+  }
+  private final case class ClusterEvent(address: String, status: String)
 
   def apply(config: Config,
             cluster: ActorRef[ClusterStateSubscription]): Source[ServerSentEvent, NotUsed] = {
@@ -63,22 +61,7 @@ object ClusterEvents {
     val reachabilityEvents = subscribe[ReachabilityEvent](bufferSize, cluster).map(toClusterEvent)
     val events             = memberEvents.merge(reachabilityEvents, eagerComplete = true)
 
-    var labels = Map.empty[Address, String]
     events
-      .statefulMapConcat(() => {
-        case event @ ClusterEvent(address, status, _) =>
-          val label =
-            labels.get(address) match {
-              case None =>
-                val label = if (labels.isEmpty) "A" else nextLabel(labels.values.max)
-                labels += address -> label
-                label
-              case Some(label) =>
-                if (status == "removed") labels -= address
-                label
-            }
-          List(event.copy(label = label))
-      })
       .map(event => ServerSentEvent(event.asJson.noSpaces))
       .keepAlive(keepAlive, () => ServerSentEvent.heartbeat)
   }
