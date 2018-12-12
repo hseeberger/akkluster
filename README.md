@@ -37,7 +37,9 @@ kubectl apply -f k8s.yml
 
 # Make one dynamic replica unreachable
 kubectl exec -i -t akkluster-dynamic-... bash 
-iptables -A INPUT -p tcp --dport 25520 -j DROP
+iptables -A INPUT -p tcp -j DROP
+# Blocking and unblocking ALL traffic leads to MUCH faster becoming reachable again (see below)
+# iptables -A INPUT -p tcp --dport 25520 -j DROP
 
 # Add 3rd dynamic replica (weakly-up)
 kubectl apply -f k8s.yml
@@ -46,7 +48,9 @@ kubectl apply -f k8s.yml
 http --form PUT $(minikube service --url akkluster-management)/cluster/members/akka://akkluster@172.17.0.99:25520 'operation=Leave'
 
 # Make unreachable dynamic replica reachable again
-iptables -D INPUT -p tcp --dport 25520 -j DROP
+iptables -D INPUT -p tcp -j DROP
+# Blocking and unblocking ALL traffic leads to MUCH faster becoming reachable again
+# iptables -D INPUT -p tcp --dport 25520 -j DROP
 ```
 
 ## Contribution policy ##
