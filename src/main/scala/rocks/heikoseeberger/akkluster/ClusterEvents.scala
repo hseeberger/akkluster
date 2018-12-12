@@ -38,6 +38,7 @@ import akka.cluster.ClusterEvent.{
   UnreachableMember
 }
 import akka.cluster.typed.{ ClusterStateSubscription, Subscribe }
+import akka.cluster.Member
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.{ ClassTag, classTag }
 
@@ -46,10 +47,10 @@ object ClusterEvents {
   final case class Config(bufferSize: Int, keepAlive: FiniteDuration)
 
   private final object ClusterEvent {
-    def apply(address: Address, status: String): ClusterEvent =
-      ClusterEvent(address.toString, status)
+    def apply(member: Member, status: String): ClusterEvent =
+      ClusterEvent(member.address.toString, status, member.roles)
   }
-  private final case class ClusterEvent(address: String, status: String)
+  private final case class ClusterEvent(address: String, status: String, roles: Set[String])
 
   def apply(config: Config,
             cluster: ActorRef[ClusterStateSubscription]): Source[ServerSentEvent, NotUsed] = {
@@ -79,18 +80,18 @@ object ClusterEvents {
 
   private def toClusterEvent(event: MemberEvent) =
     event match {
-      case MemberJoined(member)     => ClusterEvent(member.address, "joining")
-      case MemberWeaklyUp(member)   => ClusterEvent(member.address, "weakly-up")
-      case MemberUp(member)         => ClusterEvent(member.address, "up")
-      case MemberLeft(member)       => ClusterEvent(member.address, "leaving")
-      case MemberExited(member)     => ClusterEvent(member.address, "exiting")
-      case MemberDowned(member)     => ClusterEvent(member.address, "down")
-      case MemberRemoved(member, _) => ClusterEvent(member.address, "removed")
+      case MemberJoined(m)     => ClusterEvent(m, "joining")
+      case MemberWeaklyUp(m)   => ClusterEvent(m, "weakly-up")
+      case MemberUp(m)         => ClusterEvent(m, "up")
+      case MemberLeft(m)       => ClusterEvent(m, "leaving")
+      case MemberExited(m)     => ClusterEvent(m, "exiting")
+      case MemberDowned(m)     => ClusterEvent(m, "down")
+      case MemberRemoved(m, _) => ClusterEvent(m, "removed")
     }
 
   private def toClusterEvent(event: ReachabilityEvent) =
     event match {
-      case UnreachableMember(member) => ClusterEvent(member.address, "unreachable")
-      case ReachableMember(member)   => ClusterEvent(member.address, "reachable")
+      case UnreachableMember(m) => ClusterEvent(m, "unreachable")
+      case ReachableMember(m)   => ClusterEvent(m, "reachable")
     }
 }

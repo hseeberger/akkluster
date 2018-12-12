@@ -136,6 +136,7 @@ lazy val commandAliases =
        |---
        |-Dakkluster.api.port=8080
        |-Dakka.cluster.seed-nodes.0=akka://akkluster@127.0.0.1:25520
+       |-Dakka.cluster.roles.0=static
        |-Dakka.discovery.method=config
        |-Dakka.management.http.hostname=127.0.0.1
        |-Dakka.management.http.port=8558
@@ -149,6 +150,7 @@ lazy val commandAliases =
        |---
        |-Dakkluster.api.port=8081
        |-Dakka.cluster.seed-nodes.0=akka://akkluster@127.0.0.1:25520
+       |-Dakka.cluster.roles.0=dynamic
        |-Dakka.discovery.method=config
        |-Dakka.management.http.hostname=127.0.0.1
        |-Dakka.management.http.port=8559
