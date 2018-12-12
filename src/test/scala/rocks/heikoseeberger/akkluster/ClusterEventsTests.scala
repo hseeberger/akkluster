@@ -24,6 +24,7 @@ import akka.actor.Address
 import akka.cluster.{ Member, MemberStatus }
 import akka.cluster.typed.{ ClusterStateSubscription, Subscribe }
 import akka.cluster.ClusterEvent.{
+  MemberDowned,
   MemberEvent,
   MemberExited,
   MemberJoined,
@@ -75,7 +76,7 @@ object ClusterEventsTests extends ActorTestSuite {
               reachabilityEvents.runForeach(s.!)
               Behaviors.same
           })
-        val events = ClusterEvents(config, subscriptions).take(8).runWith(Sink.seq)
+        val events = ClusterEvents(config, subscriptions).take(9).runWith(Sink.seq)
 
         val member = Mockito.mock(classOf[Member])
         Mockito.when(member.address).thenReturn(Address("akka", "test", "127.0.0.1", 25520))
@@ -83,30 +84,15 @@ object ClusterEventsTests extends ActorTestSuite {
 
         val expected =
           List(
-            ServerSentEvent(
-              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"joining","label":"A"}"""
-            ),
-            ServerSentEvent(
-              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"weakly-up","label":"A"}"""
-            ),
-            ServerSentEvent(
-              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"up","label":"A"}"""
-            ),
-            ServerSentEvent(
-              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"unreachable","label":"A"}"""
-            ),
-            ServerSentEvent(
-              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"reachable","label":"A"}"""
-            ),
-            ServerSentEvent(
-              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"leaving","label":"A"}"""
-            ),
-            ServerSentEvent(
-              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"exiting","label":"A"}"""
-            ),
-            ServerSentEvent(
-              """{"address":{"protocol":"akka","system":"test","host":"127.0.0.1","port":25520},"status":"removed","label":"A"}"""
-            ),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"joining"}"""),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"weakly-up"}"""),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"up"}"""),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"unreachable"}"""),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"reachable"}"""),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"leaving"}"""),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"exiting"}"""),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"removed"}"""),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"down"}"""),
           )
 
         for {
@@ -122,7 +108,9 @@ object ClusterEventsTests extends ActorTestSuite {
           _ = Mockito.when(member.status).thenReturn(MemberStatus.Exiting)
           _ <- memberEventsQueue.offer(MemberExited(member))
           _ = Mockito.when(member.status).thenReturn(MemberStatus.Removed)
-          _  <- memberEventsQueue.offer(MemberRemoved(member, MemberStatus.Exiting))
+          _ <- memberEventsQueue.offer(MemberRemoved(member, MemberStatus.Exiting))
+          _ = Mockito.when(member.status).thenReturn(MemberStatus.Down)
+          _  <- memberEventsQueue.offer(MemberDowned(member))
           es <- events
         } yield assert(es == expected)
       }
