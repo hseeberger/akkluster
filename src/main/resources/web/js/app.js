@@ -5,10 +5,12 @@ function onload() {
     function handleEvent(event) {
         if (event.data !== "") {
             let {address, status, roles} = JSON.parse(event.data);
+            let isStatic = roles.includes('static');
+            console.log(address, status, isStatic);
             if (status === "removed") {
                 members.delete(address);
             } else {
-                let m = {status: status, isStatic: roles.includes('static')};
+                let m = {status: status, isStatic: isStatic};
                 members.set(address, m);
             }
             updateCircles(selectedMember, members);
@@ -23,7 +25,8 @@ function updateCircles(selectedMember, members) {
     let circles = d3.select("svg").selectAll("circle").data(Array.from(members));
 
     circles
-        .style("fill", ([, {status}]) => statusToColor(status));
+        .style("fill", ([, {status}]) => statusToColor(status))
+        .style("stroke-width", ([address, {isStatic}]) => isStatic ? 2 : 0);
 
     circles.enter()
         .append("circle")
@@ -40,7 +43,6 @@ function updateCircles(selectedMember, members) {
 }
 
 function statusToColor(status) {
-    console.log("status", status);
     return status === "joining" ? "lightblue"
         : status === "weakly-up" ? "lightgreen"
             : status === "up" ? "green"

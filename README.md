@@ -28,28 +28,28 @@ minikube start
 
 # Start with 1 dynamic replica
 kubectl apply -f k8s.yml
-http --stream $(minikube service --url akkluster-http)/events
 minikube service akkluster-http
+http --stream $(minikube service --url akkluster-http)/events
 http $(minikube service --url akkluster-management)/cluster/members
 
-# Add 2nd dynamic replica
-kubectl apply -f k8s.yml
+# Scale up to two replicas, down to one again and up to two again
+kubectl patch deployment akkluster-dynamic -p '{"spec": {"replicas": 2}}'
+kubectl patch deployment akkluster-dynamic -p '{"spec": {"replicas": 1}}'
+kubectl patch deployment akkluster-dynamic -p '{"spec": {"replicas": 2}}'
 
 # Make one dynamic replica unreachable
 kubectl exec -i -t akkluster-dynamic-... bash 
 iptables -A INPUT -p tcp -j DROP
-# Blocking and unblocking ALL traffic leads to MUCH faster becoming reachable again (see below)
 # iptables -A INPUT -p tcp --dport 25520 -j DROP
 
-# Add 3rd dynamic replica (weakly-up)
-kubectl apply -f k8s.yml
+# Scale up to three replicas and see what happens ...
+kubectl patch deployment akkluster-dynamic -p '{"spec": {"replicas": 3}}'
 
-# Make one dynamic replica leave (leving)
+# Make one dynamic replica leave
 http --form PUT $(minikube service --url akkluster-management)/cluster/members/akka://akkluster@172.17.0.99:25520 'operation=Leave'
 
 # Make unreachable dynamic replica reachable again
 iptables -D INPUT -p tcp -j DROP
-# Blocking and unblocking ALL traffic leads to MUCH faster becoming reachable again
 # iptables -D INPUT -p tcp --dport 25520 -j DROP
 ```
 
