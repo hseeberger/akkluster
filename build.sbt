@@ -16,7 +16,8 @@ lazy val `akkluster` =
         library.akkaDiscoveryK8s,
         library.akkaHttp,
         library.akkaHttpCirce,
-        library.akkaSbr,
+        // To use the Lightbend SBR you need a Lightbend account (demo or commercial)
+        // library.akkaSbr, 
         library.akkaSlf4j,
         library.akkaStreamTyped,
         library.circeGeneric,
