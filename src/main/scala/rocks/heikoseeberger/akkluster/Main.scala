@@ -21,7 +21,7 @@ import akka.actor.typed.{ ActorSystem, Behavior }
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter.TypedActorSystemOps
 import akka.cluster.typed.{ Cluster, SelfUp, Subscribe, Unsubscribe }
-import akka.management.AkkaManagement
+import akka.management.scaladsl.AkkaManagement
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.stream.typed.scaladsl.ActorMaterializer
 import akka.stream.Materializer

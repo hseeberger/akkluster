@@ -12,12 +12,11 @@ lazy val `akkluster` =
         library.akkaClusterBootstrap,
         library.akkaClusterHttp,
         library.akkaClusterShardingTyped,
-        library.akkaDiscoveryConfig, // For running locally only!
         library.akkaDiscoveryK8s,
         library.akkaHttp,
         library.akkaHttpCirce,
         // To use the Lightbend SBR you need a Lightbend account (demo or commercial)
-        // library.akkaSbr, 
+        // library.akkaSbr,
         library.akkaSlf4j,
         library.akkaStreamTyped,
         library.circeGeneric,
@@ -43,25 +42,24 @@ lazy val `akkluster` =
 lazy val library =
   new {
     object Version {
-      val akka           = "2.5.19"
-      val akkaHttp       = "10.1.5"
-      val akkaHttpJson   = "1.22.0"
-      val akkaManagement = "0.20.0"
+      val akka           = "2.5.22"
+      val akkaHttp       = "10.1.8"
+      val akkaHttpJson   = "1.25.2"
+      val akkaManagement = "1.0.0"
       val akkaSbr        = "1.1.4"
-      val circe          = "0.10.1"
+      val circe          = "0.11.1"
       val disruptor      = "3.4.2"
-      val log4j          = "2.11.1"
+      val log4j          = "2.11.2"
       val log4jApiScala  = "11.0"
-      val mockito        = "2.23.4"
-      val pureConfig     = "0.10.1"
+      val mockito        = "2.27.0"
+      val pureConfig     = "0.10.2"
       val scalaCheck     = "1.14.0"
-      val utest          = "0.6.6"
+      val utest          = "0.6.7"
     }
     val akkaActorTestkitTyped    = "com.typesafe.akka"             %% "akka-actor-testkit-typed"          % Version.akka
     val akkaClusterBootstrap     = "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % Version.akkaManagement
     val akkaClusterHttp          = "com.lightbend.akka.management" %% "akka-management-cluster-http"      % Version.akkaManagement
     val akkaClusterShardingTyped = "com.typesafe.akka"             %% "akka-cluster-sharding-typed"       % Version.akka
-    val akkaDiscoveryConfig      = "com.lightbend.akka.discovery"  %% "akka-discovery-config"             % Version.akkaManagement
     val akkaDiscoveryK8s         = "com.lightbend.akka.discovery"  %% "akka-discovery-kubernetes-api"     % Version.akkaManagement
     val akkaHttp                 = "com.typesafe.akka"             %% "akka-http"                         % Version.akkaHttp
     val akkaHttpCirce            = "de.heikoseeberger"             %% "akka-http-circe"                   % Version.akkaHttpJson
@@ -126,7 +124,7 @@ lazy val dockerSettings =
     Docker / maintainer := "Heiko Seeberger",
     Docker / version := "latest",
     dockerBaseImage := "hseeberger/openjdk-iptables:8u181-slim",
-    dockerExposedPorts := Seq(80, 8558, 25520),
+    dockerExposedPorts := Seq(80, 8558),
     dockerRepository := Some("hseeberger"),
   )
 
@@ -135,27 +133,25 @@ lazy val commandAliases =
     "r0",
     """|reStart
        |---
+       |-Dakkluster.api.hostname=127.0.0.1
        |-Dakkluster.api.port=8080
        |-Dakka.cluster.seed-nodes.0=akka://akkluster@127.0.0.1:25520
        |-Dakka.cluster.roles.0=static
        |-Dakka.discovery.method=config
        |-Dakka.management.http.hostname=127.0.0.1
-       |-Dakka.management.http.port=8558
        |-Dakka.remote.artery.canonical.hostname=127.0.0.1
-       |-Dakka.remote.artery.canonical.port=25520
        |""".stripMargin
   ) ++
   addCommandAlias(
     "r1",
     """|reStart
        |---
-       |-Dakkluster.api.port=8081
+       |-Dakkluster.api.hostname=127.0.0.2
+       |-Dakkluster.api.port=8080
        |-Dakka.cluster.seed-nodes.0=akka://akkluster@127.0.0.1:25520
        |-Dakka.cluster.roles.0=dynamic
        |-Dakka.discovery.method=config
-       |-Dakka.management.http.hostname=127.0.0.1
-       |-Dakka.management.http.port=8559
-       |-Dakka.remote.artery.canonical.hostname=127.0.0.1
-       |-Dakka.remote.artery.canonical.port=25521
+       |-Dakka.management.http.hostname=127.0.0.2
+       |-Dakka.remote.artery.canonical.hostname=127.0.0.2
        |""".stripMargin
  )

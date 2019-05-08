@@ -30,7 +30,7 @@ import scala.util.{ Failure, Success }
 
 object Api {
 
-  final case class Config(address: String,
+  final case class Config(hostname: String,
                           port: Int,
                           terminationDeadline: FiniteDuration,
                           clusterEvents: ClusterEvents.Config)
@@ -48,10 +48,10 @@ object Api {
     val shutdown = CoordinatedShutdown(untypedSystem)
 
     Http()
-      .bindAndHandle(route(config, cluster), address, port)
+      .bindAndHandle(route(config, cluster), hostname, port)
       .onComplete {
         case Failure(cause) =>
-          log.error(cause, "Shutting down, because cannot bind to {}:{}!", address, port)
+          log.error(cause, "Shutting down, because cannot bind to {}:{}!", hostname, port)
           shutdown.run(BindFailure)
 
         case Success(binding) =>
