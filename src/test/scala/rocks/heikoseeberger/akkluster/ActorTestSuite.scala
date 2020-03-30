@@ -18,7 +18,6 @@ package rocks.heikoseeberger.akkluster
 
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.stream.Materializer
-import akka.stream.typed.scaladsl.ActorMaterializer
 import scala.concurrent.ExecutionContext
 import utest.TestSuite
 
@@ -30,7 +29,7 @@ abstract class ActorTestSuite extends TestSuite {
   import testkit._
 
   protected implicit val mat: Materializer =
-    ActorMaterializer()
+    Materializer(testkit.system)
 
   protected implicit val ec: ExecutionContext =
     system.executionContext

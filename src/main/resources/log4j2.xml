@@ -23,7 +23,7 @@
             <AppenderRef ref="stdout-behavior"/>
         </Logger>
 
-        <Root level="${sys:loglevel.root:-error}">
+        <Root level="${sys:loglevel.root:-debug}">
             <AppenderRef ref="stdout"/>
         </Root>
     </Loggers>

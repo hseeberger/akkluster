@@ -16,47 +16,58 @@
 
 package rocks.heikoseeberger.akkluster
 
-import akka.actor.{ ActorSystem, CoordinatedShutdown }
+import akka.actor.{ CoordinatedShutdown, ActorSystem => ClassicSystem }
 import akka.actor.typed.ActorRef
 import akka.cluster.typed.ClusterStateSubscription
-import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ StatusCodes, Uri }
 import akka.http.scaladsl.server.Route
-import akka.stream.Materializer
 import akka.Done
+import org.slf4j.LoggerFactory
+import scala.concurrent.{ Future, Promise }
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{ Failure, Success }
 
-object Api {
+object HttpServer {
 
-  final case class Config(hostname: String,
-                          port: Int,
-                          terminationDeadline: FiniteDuration,
-                          clusterEvents: ClusterEvents.Config)
+  final case class Config(
+      interface: String,
+      port: Int,
+      terminationDeadline: FiniteDuration,
+      clusterEvents: ClusterEvents.Config
+  )
+
+  final class ReadinessCheck extends (() => Future[Boolean]) {
+    override def apply(): Future[Boolean] =
+      ready.future
+  }
 
   private final object BindFailure extends CoordinatedShutdown.Reason
 
-  def apply(
+  private val ready = Promise[Boolean]()
+
+  def run(
       config: Config,
       cluster: ActorRef[ClusterStateSubscription]
-  )(implicit untypedSystem: ActorSystem, mat: Materializer): Unit = {
+  )(implicit classicSystem: ClassicSystem): Unit = {
+    import classicSystem.dispatcher
     import config._
-    import untypedSystem.dispatcher
 
-    val log      = Logging(untypedSystem, this.getClass.getName)
-    val shutdown = CoordinatedShutdown(untypedSystem)
+    val log      = LoggerFactory.getLogger(this.getClass)
+    val shutdown = CoordinatedShutdown(classicSystem)
 
     Http()
-      .bindAndHandle(route(config, cluster), hostname, port)
+      .bindAndHandle(route(config, cluster), interface, port)
       .onComplete {
         case Failure(cause) =>
-          log.error(cause, "Shutting down, because cannot bind to {}:{}!", hostname, port)
+          log.error(s"Shutting down, because cannot bind to $interface:$port!", cause)
           shutdown.run(BindFailure)
 
         case Success(binding) =>
-          log.info("Listening for HTTP connections on {}", binding.localAddress)
-          shutdown.addTask(CoordinatedShutdown.PhaseServiceUnbind, "api.unbind") { () =>
+          if (log.isInfoEnabled)
+            log.info(s"Listening for HTTP connections on ${binding.localAddress}")
+          ready.success(true)
+          shutdown.addTask(CoordinatedShutdown.PhaseServiceUnbind, "terminate-http-server") { () =>
             binding.terminate(terminationDeadline).map(_ => Done)
           }
       }

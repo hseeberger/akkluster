@@ -92,7 +92,7 @@ object ClusterEventsTests extends ActorTestSuite {
             ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"leaving"}"""),
             ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"exiting"}"""),
             ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"removed"}"""),
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"down"}"""),
+            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"down"}""")
           )
 
         for {

@@ -51,8 +51,10 @@ object ClusterEvents {
   }
   private final case class ClusterEvent(address: String, status: String, roles: Set[String])
 
-  def apply(config: Config,
-            cluster: ActorRef[ClusterStateSubscription]): Source[ServerSentEvent, NotUsed] = {
+  def apply(
+      config: Config,
+      cluster: ActorRef[ClusterStateSubscription]
+  ): Source[ServerSentEvent, NotUsed] = {
     import config._
     import io.circe.generic.auto._
     import io.circe.syntax._

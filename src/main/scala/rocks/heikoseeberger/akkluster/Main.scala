@@ -16,49 +16,55 @@
 
 package rocks.heikoseeberger.akkluster
 
-import akka.actor.{ ActorSystem => UntypedSystem }
-import akka.actor.typed.{ ActorSystem, Behavior }
+import akka.actor.{ ActorSystem => ClassicSystem }
+import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.scaladsl.adapter.TypedActorSystemOps
+import akka.actor.typed.scaladsl.adapter.{ ClassicActorSystemOps, TypedActorSystemOps }
 import akka.cluster.typed.{ Cluster, SelfUp, Subscribe, Unsubscribe }
-import akka.management.scaladsl.AkkaManagement
 import akka.management.cluster.bootstrap.ClusterBootstrap
-import akka.stream.typed.scaladsl.ActorMaterializer
-import akka.stream.Materializer
+import akka.management.scaladsl.AkkaManagement
 import org.apache.logging.log4j.core.async.AsyncLoggerContextSelector
 import pureconfig.generic.auto.exportReader
-import pureconfig.loadConfigOrThrow
+import pureconfig.ConfigSource
 
 object Main {
 
-  private final case class Config(api: Api.Config)
+  private final val Name = "akkluster"
+
+  private final case class Config(httpServer: HttpServer.Config)
 
   def main(args: Array[String]): Unit = {
-    sys.props += "log4j2.contextSelector" -> classOf[AsyncLoggerContextSelector].getName // Always use async logging!
+    // Always use async logging!
+    sys.props += "log4j2.contextSelector" -> classOf[AsyncLoggerContextSelector].getName
 
-    val config = loadConfigOrThrow[Config]("akkluster") // Must be first to aviod creating the actor system on failure!
-    val system = ActorSystem(Main(config), "akkluster")
+    // Happens before creating the actor system to fail fast
+    val config = ConfigSource.default.at(Name).loadOrThrow[Config]
 
-    AkkaManagement(system.toUntyped).start()
-    ClusterBootstrap(system.toUntyped).start()
+    // Use a classic system, because some libraries still rely on it
+    val classicSystem = ClassicSystem(Name)
+    AkkaManagement(classicSystem).start()
+    ClusterBootstrap(classicSystem).start()
+    classicSystem.spawn(Main(config), "main")
   }
 
   def apply(config: Config): Behavior[SelfUp] =
     Behaviors.setup { context =>
-      context.log.info("{} started and ready to join cluster", context.system.name)
+      import context.log
 
       val cluster = Cluster(context.system)
+
+      if (log.isInfoEnabled)
+        log.info(s"${context.system.name} started and ready to join cluster")
       cluster.subscriptions ! Subscribe(context.self, classOf[SelfUp])
 
       Behaviors.receive { (context, _) =>
-        context.log.info("{} joined cluster and is up", context.system.name)
-
+        if (log.isInfoEnabled)
+          log.info(s"${context.system.name} joined cluster and is up")
         cluster.subscriptions ! Unsubscribe(context.self)
 
-        implicit val untypedSystem: UntypedSystem = context.system.toUntyped
-        implicit val mat: Materializer            = ActorMaterializer()(context.system)
+        implicit val classicSystem: ClassicSystem = context.system.toClassic
 
-        Api(config.api, cluster.subscriptions)
+        HttpServer.run(config.httpServer, cluster.subscriptions)
 
         Behaviors.empty
       }
