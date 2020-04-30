@@ -59,7 +59,7 @@ spec:
     spec:
       containers:
       - name: akkluster
-        image: akkluster:latest
+        image: hseeberger/akkluster:latest
         imagePullPolicy: IfNotPresent
         args: [
           "-Dakka.cluster.roles.0=static"
@@ -103,7 +103,7 @@ spec:
     spec:
       containers:
       - name: akkluster
-        image: akkluster:latest
+        image: hseeberger/akkluster:latest
         imagePullPolicy: IfNotPresent
         args: [
           "-Dakka.cluster.roles.0=dynamic"

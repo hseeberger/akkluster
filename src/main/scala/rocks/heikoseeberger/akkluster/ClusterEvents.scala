@@ -38,6 +38,7 @@ import akka.cluster.ClusterEvent.{
 }
 import akka.cluster.typed.{ ClusterStateSubscription, Subscribe }
 import akka.cluster.Member
+import io.bullet.borer.{ Codec, Json }
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.{ ClassTag, classTag }
 
@@ -46,9 +47,14 @@ object ClusterEvents {
   final case class Config(bufferSize: Int, keepAlive: FiniteDuration)
 
   private final object ClusterEvent {
+    import io.bullet.borer.derivation.MapBasedCodecs._
+
+    implicit val codec: Codec[ClusterEvent] = deriveCodec
+
     def apply(member: Member, status: String): ClusterEvent =
       ClusterEvent(member.address.toString, status, member.roles)
   }
+
   private final case class ClusterEvent(address: String, status: String, roles: Set[String])
 
   def apply(
@@ -56,15 +62,13 @@ object ClusterEvents {
       cluster: ActorRef[ClusterStateSubscription]
   ): Source[ServerSentEvent, NotUsed] = {
     import config._
-    import io.circe.generic.auto._
-    import io.circe.syntax._
 
     val memberEvents       = subscribe[MemberEvent](bufferSize, cluster).map(toClusterEvent)
     val reachabilityEvents = subscribe[ReachabilityEvent](bufferSize, cluster).map(toClusterEvent)
     val events             = memberEvents.merge(reachabilityEvents, eagerComplete = true)
 
     events
-      .map(event => ServerSentEvent(event.asJson.noSpaces))
+      .map(event => ServerSentEvent(Json.encode(event).toUtf8String))
       .keepAlive(keepAlive, () => ServerSentEvent.heartbeat)
   }
 

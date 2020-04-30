@@ -17,25 +17,32 @@
 package rocks.heikoseeberger.akkluster
 
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
+import akka.actor.typed.ActorSystem
 import akka.stream.Materializer
+import munit.FunSuite
 import scala.concurrent.ExecutionContext
-import utest.TestSuite
 
-abstract class ActorTestSuite extends TestSuite {
+abstract class ActorTestKitSuite extends FunSuite {
 
-  protected val testkit: ActorTestKit =
-    ActorTestKit()
+  protected val testKit: Fixture[ActorTestKit] =
+    new Fixture[ActorTestKit]("testkit") {
+      private val testKit = ActorTestKit()
 
-  import testkit._
+      override def apply(): ActorTestKit =
+        testKit
+
+      override def afterAll(): Unit = {
+        testKit.shutdownTestKit()
+        super.afterAll()
+      }
+    }
+
+  protected implicit val system: ActorSystem[Nothing] =
+    testKit().system
 
   protected implicit val mat: Materializer =
-    Materializer(testkit.system)
+    Materializer(testKit().system)
 
   protected implicit val ec: ExecutionContext =
-    system.executionContext
-
-  override def utestAfterAll(): Unit = {
-    shutdownTestKit()
-    super.utestAfterAll()
-  }
+    testKit().system.executionContext
 }

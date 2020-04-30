@@ -40,19 +40,19 @@ minikube start
 
 # Start with 1 dynamic replica
 kubectl apply -f k8s.yml
-minikube service akkluster-http
+minikube service --namespace akkluster akkluster-http
 
 # Scale up to two replicas, down to one again and up to two again
-kubectl patch deployment akkluster-dynamic -p '{"spec": {"replicas": 2}}'
-kubectl patch deployment akkluster-dynamic -p '{"spec": {"replicas": 1}}'
-kubectl patch deployment akkluster-dynamic -p '{"spec": {"replicas": 2}}'
+kubectl patch --namespace akkluster deployment akkluster-dynamic -p '{"spec": {"replicas": 2}}'
+kubectl patch --namespace akkluster deployment akkluster-dynamic -p '{"spec": {"replicas": 1}}'
+kubectl patch --namespace akkluster deployment akkluster-dynamic -p '{"spec": {"replicas": 2}}'
 
 # Make one dynamic replica unreachable
-kubectl exec -i -t akkluster-dynamic-... bash
+kubectl exec --namespace akkluster -i -t akkluster-dynamic-... -- bash
 iptables -A INPUT -p tcp -j DROP
 
 # Scale up to three replicas and see what happens ...
-kubectl patch deployment akkluster-dynamic -p '{"spec": {"replicas": 3}}'
+kubectl patch --namespace akkluster deployment akkluster-dynamic -p '{"spec": {"replicas": 3}}'
 
 # Make one dynamic replica leave
 http --form PUT $(minikube service --url akkluster-management)/cluster/members/akka://akkluster@172.17.0.???:25520 'operation=Leave'

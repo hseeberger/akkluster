@@ -41,83 +41,92 @@ import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{ Sink, Source }
 import org.mockito.Mockito
 import scala.concurrent.duration.DurationInt
-import utest._
 
-object ClusterEventsTests extends ActorTestSuite {
+final class ClusterEventsTests extends ActorTestKitSuite {
   import ClusterEvents._
-  import testkit._
 
   private val config = Config(42, 42.seconds)
 
-  override def tests: Tests =
-    Tests {
-      'subscribe - {
-        val subscriptions = TestProbe[ClusterStateSubscription]()
-        ClusterEvents(config, subscriptions.ref).runWith(Sink.ignore)
-        subscriptions.fishForMessage(3.seconds) {
-          case Subscribe(_, c) if c == classOf[MemberEvent]       => FishingOutcome.Continue
-          case Subscribe(_, c) if c == classOf[ReachabilityEvent] => FishingOutcome.Complete
-          case other                                              => FishingOutcome.Fail(s"Unexpected message: $other")
-        }
-      }
-
-      'events - {
-        val (memberEventsQueue, memberEvents) =
-          Source.queue[MemberEvent](1, OverflowStrategy.fail).preMaterialize()
-        val (reachabilityEventsQueue, reachabilityEvents) =
-          Source.queue[ReachabilityEvent](1, OverflowStrategy.fail).preMaterialize()
-        val subscriptions =
-          spawn(Behaviors.receiveMessage[ClusterStateSubscription] {
-            case Subscribe(s: ActorRef[MemberEvent], c) if c == classOf[MemberEvent] =>
-              memberEvents.runForeach(s.!)
-              Behaviors.same
-
-            case Subscribe(s: ActorRef[ReachabilityEvent], c) if c == classOf[ReachabilityEvent] =>
-              reachabilityEvents.runForeach(s.!)
-              Behaviors.same
-          })
-        val events = ClusterEvents(config, subscriptions).take(9).runWith(Sink.seq)
-
-        val member = Mockito.mock(classOf[Member])
-        Mockito.when(member.address).thenReturn(Address("akka", "test", "127.0.0.1", 25520))
-        Mockito.when(member.status).thenReturn(MemberStatus.Joining)
-
-        val expected =
-          List(
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"joining"}"""),
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"weakly-up"}"""),
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"up"}"""),
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"unreachable"}"""),
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"reachable"}"""),
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"leaving"}"""),
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"exiting"}"""),
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"removed"}"""),
-            ServerSentEvent("""{"address":"akka://test@127.0.0.1:25520","status":"down"}""")
-          )
-
-        for {
-          _ <- memberEventsQueue.offer(MemberJoined(member))
-          _ = Mockito.when(member.status).thenReturn(MemberStatus.WeaklyUp)
-          _ <- memberEventsQueue.offer(MemberWeaklyUp(member))
-          _ = Mockito.when(member.status).thenReturn(MemberStatus.Up)
-          _ <- memberEventsQueue.offer(MemberUp(member))
-          _ <- reachabilityEventsQueue.offer(UnreachableMember(member))
-          _ <- reachabilityEventsQueue.offer(ReachableMember(member))
-          _ = Mockito.when(member.status).thenReturn(MemberStatus.Leaving)
-          _ <- memberEventsQueue.offer(MemberLeft(member))
-          _ = Mockito.when(member.status).thenReturn(MemberStatus.Exiting)
-          _ <- memberEventsQueue.offer(MemberExited(member))
-          _ = Mockito.when(member.status).thenReturn(MemberStatus.Removed)
-          _ <- memberEventsQueue.offer(MemberRemoved(member, MemberStatus.Exiting))
-          _ = Mockito.when(member.status).thenReturn(MemberStatus.Down)
-          _  <- memberEventsQueue.offer(MemberDowned(member))
-          es <- events
-        } yield assert(es == expected)
-      }
+  test("subscribe") {
+    val subscriptions = TestProbe[ClusterStateSubscription]()
+    ClusterEvents(config, subscriptions.ref).runWith(Sink.ignore)
+    subscriptions.fishForMessage(3.seconds) {
+      case Subscribe(_, c) if c == classOf[MemberEvent]       => FishingOutcome.Continue
+      case Subscribe(_, c) if c == classOf[ReachabilityEvent] => FishingOutcome.Complete
+      case other                                              => FishingOutcome.Fail(s"Unexpected message: $other")
     }
+  }
 
-  override def utestAfterAll(): Unit = {
-    shutdownTestKit()
-    super.utestAfterAll()
+  test("events") {
+    val (memberEventsQueue, memberEvents) =
+      Source.queue[MemberEvent](1, OverflowStrategy.fail).preMaterialize()
+    val (reachabilityEventsQueue, reachabilityEvents) =
+      Source.queue[ReachabilityEvent](1, OverflowStrategy.fail).preMaterialize()
+    val subscriptions =
+      testKit().spawn(Behaviors.receiveMessage[ClusterStateSubscription] {
+        case Subscribe(s: ActorRef[MemberEvent], c) if c == classOf[MemberEvent] =>
+          memberEvents.runForeach(s.!)
+          Behaviors.same
+
+        case Subscribe(s: ActorRef[ReachabilityEvent], c) if c == classOf[ReachabilityEvent] =>
+          reachabilityEvents.runForeach(s.!)
+          Behaviors.same
+      })
+    val events = ClusterEvents(config, subscriptions).take(9).runWith(Sink.seq)
+
+    val member = Mockito.mock(classOf[Member])
+    Mockito.when(member.address).thenReturn(Address("akka", "test", "127.0.0.1", 25520))
+    Mockito.when(member.status).thenReturn(MemberStatus.Joining)
+    Mockito.when(member.roles).thenReturn(Set.empty)
+
+    val expected =
+      List(
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"joining","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"weakly-up","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"up","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"unreachable","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"reachable","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"leaving","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"exiting","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"removed","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"down","roles":[]}"""
+        )
+      )
+
+    for {
+      _ <- memberEventsQueue.offer(MemberJoined(member))
+      _ = Mockito.when(member.status).thenReturn(MemberStatus.WeaklyUp)
+      _ <- memberEventsQueue.offer(MemberWeaklyUp(member))
+      _ = Mockito.when(member.status).thenReturn(MemberStatus.Up)
+      _ <- memberEventsQueue.offer(MemberUp(member))
+      _ <- reachabilityEventsQueue.offer(UnreachableMember(member))
+      _ <- reachabilityEventsQueue.offer(ReachableMember(member))
+      _ = Mockito.when(member.status).thenReturn(MemberStatus.Leaving)
+      _ <- memberEventsQueue.offer(MemberLeft(member))
+      _ = Mockito.when(member.status).thenReturn(MemberStatus.Exiting)
+      _ <- memberEventsQueue.offer(MemberExited(member))
+      _ = Mockito.when(member.status).thenReturn(MemberStatus.Removed)
+      _ <- memberEventsQueue.offer(MemberRemoved(member, MemberStatus.Exiting))
+      _ = Mockito.when(member.status).thenReturn(MemberStatus.Down)
+      _  <- memberEventsQueue.offer(MemberDowned(member))
+      es <- events
+    } yield assertEquals(es, expected)
   }
 }
