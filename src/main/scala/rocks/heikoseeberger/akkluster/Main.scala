@@ -19,7 +19,7 @@ package rocks.heikoseeberger.akkluster
 import akka.actor.{ ActorSystem => ClassicSystem }
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.scaladsl.adapter.{ ClassicActorSystemOps, TypedActorSystemOps }
+import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import akka.cluster.typed.{ Cluster, SelfUp, Subscribe, Unsubscribe }
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
@@ -49,22 +49,18 @@ object Main {
 
   def apply(config: Config): Behavior[SelfUp] =
     Behaviors.setup { context =>
-      import context.log
-
+      val log     = context.log
       val cluster = Cluster(context.system)
+      val name    = context.system.name
 
-      if (log.isInfoEnabled)
-        log.info(s"${context.system.name} started and ready to join cluster")
+      if (log.isInfoEnabled) log.info(s"$name started and ready to join cluster")
       cluster.subscriptions ! Subscribe(context.self, classOf[SelfUp])
 
       Behaviors.receive { (context, _) =>
-        if (log.isInfoEnabled)
-          log.info(s"${context.system.name} joined cluster and is up")
+        if (log.isInfoEnabled) log.info(s"$name joined cluster and is up")
         cluster.subscriptions ! Unsubscribe(context.self)
 
-        implicit val classicSystem: ClassicSystem = context.system.toClassic
-
-        HttpServer.run(config.httpServer, cluster.subscriptions)
+        HttpServer.run(config.httpServer, cluster.subscriptions)(context.system)
 
         Behaviors.empty
       }

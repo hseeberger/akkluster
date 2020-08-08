@@ -16,13 +16,12 @@
 
 package rocks.heikoseeberger.akkluster
 
-import akka.actor.{ CoordinatedShutdown, ActorSystem => ClassicSystem }
-import akka.actor.typed.ActorRef
+import akka.actor.CoordinatedShutdown
+import akka.actor.typed.{ ActorRef, ActorSystem }
 import akka.cluster.typed.ClusterStateSubscription
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ StatusCodes, Uri }
 import akka.http.scaladsl.server.Route
-import akka.Done
 import org.slf4j.LoggerFactory
 import scala.concurrent.{ Future, Promise }
 import scala.concurrent.duration.FiniteDuration
@@ -49,15 +48,16 @@ object HttpServer {
   def run(
       config: Config,
       cluster: ActorRef[ClusterStateSubscription]
-  )(implicit classicSystem: ClassicSystem): Unit = {
-    import classicSystem.dispatcher
+  )(implicit system: ActorSystem[_]): Unit = {
     import config._
+    import system.executionContext
 
     val log      = LoggerFactory.getLogger(this.getClass)
-    val shutdown = CoordinatedShutdown(classicSystem)
+    val shutdown = CoordinatedShutdown(system)
 
     Http()
-      .bindAndHandle(route(config, cluster), interface, port)
+      .newServerAt(interface, port)
+      .bind(route(config, cluster))
       .onComplete {
         case Failure(cause) =>
           log.error(s"Shutting down, because cannot bind to $interface:$port!", cause)
@@ -65,11 +65,9 @@ object HttpServer {
 
         case Success(binding) =>
           if (log.isInfoEnabled)
-            log.info(s"Listening for HTTP connections on ${binding.localAddress}")
+            log.info(s"Listening to HTTP connections on ${binding.localAddress}")
           ready.success(true)
-          shutdown.addTask(CoordinatedShutdown.PhaseServiceUnbind, "terminate-http-server") { () =>
-            binding.terminate(terminationDeadline).map(_ => Done)
-          }
+          binding.addToCoordinatedShutdown(terminationDeadline)
       }
   }
 

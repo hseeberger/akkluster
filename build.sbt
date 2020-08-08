@@ -42,7 +42,10 @@ lazy val akkluster =
       dockerRepository := Some("hseeberger"),
       daemonUser in Docker := "root",
       daemonUserUid in Docker := None,
-)
+      // Publish settings
+      Compile / packageDoc / publishArtifact := false,
+      Compile / packageSrc / publishArtifact := false,
+    )
     .settings(commandAliases)
 
 // *****************************************************************************
@@ -52,17 +55,17 @@ lazy val akkluster =
 lazy val library =
   new {
     object Version {
-      val akka          = "2.6.5"
-      val akkaHttp      = "10.1.11"
-      val akkaMgm       = "1.0.6"
+      val akka          = "2.6.8"
+      val akkaHttp      = "10.2.0"
+      val akkaMgm       = "1.0.8"
       val akkaSbr       = "1.1.4"
-      val borer         = "1.5.0"
+      val borer         = "1.6.1"
       val disruptor     = "3.4.2"
-      val log4j         = "2.13.2"
-      val mockito       = "3.3.3"
-      val pureConfig    = "0.12.3"
+      val log4j         = "2.13.3"
+      val mockito       = "3.4.6"
+      val pureConfig    = "0.13.0"
       val scalaCheck    = "1.14.3"
-      val mUnit         = "0.7.4"
+      val mUnit         = "0.7.10"
     }
     val akkaActorTestkitTyped    = "com.typesafe.akka"             %% "akka-actor-testkit-typed"          % Version.akka
     val akkaClusterShardingTyped = "com.typesafe.akka"             %% "akka-cluster-sharding-typed"       % Version.akka
@@ -94,7 +97,7 @@ lazy val library =
 
 lazy val commonSettings =
   Seq(
-    scalaVersion := "2.13.2",
+    scalaVersion := "2.13.3",
     organization := "rocks.heikoseeberger",
     organizationName := "Heiko Seeberger",
     startYear := Some(2018),
@@ -103,14 +106,9 @@ lazy val commonSettings =
       "-unchecked",
       "-deprecation",
       "-language:_",
-      "-target:jvm-1.8",
       "-encoding", "UTF-8",
       "-Ywarn-unused:imports",
     ),
-    Compile / unmanagedSourceDirectories := Seq((Compile / scalaSource).value),
-    Test / unmanagedSourceDirectories := Seq((Test / scalaSource).value),
-    Compile / packageDoc / publishArtifact := false,
-    Compile / packageSrc / publishArtifact := false,
     testFrameworks += new TestFramework("munit.Framework"),
     scalafmtOnCompile := true,
 )

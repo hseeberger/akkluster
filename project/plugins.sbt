@@ -1,5 +1,5 @@
-addSbtPlugin("com.dwijnand"            % "sbt-dynver"          % "4.0.0")
-addSbtPlugin("com.typesafe.sbt"        % "sbt-native-packager" % "1.7.0")
+addSbtPlugin("com.dwijnand"            % "sbt-dynver"          % "4.1.1")
+addSbtPlugin("com.typesafe.sbt"        % "sbt-native-packager" % "1.7.4")
 addSbtPlugin("de.heikoseeberger"       % "sbt-header"          % "5.6.0")
-addSbtPlugin("org.scalameta"           % "sbt-scalafmt"        % "2.3.4")
+addSbtPlugin("org.scalameta"           % "sbt-scalafmt"        % "2.4.2")
 addSbtPlugin("io.spray"                % "sbt-revolver"        % "0.9.1")
