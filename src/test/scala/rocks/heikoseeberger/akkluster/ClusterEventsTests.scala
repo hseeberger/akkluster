@@ -71,6 +71,9 @@ final class ClusterEventsTests extends ActorTestKitSuite {
         case Subscribe(s: ActorRef[ReachabilityEvent], c) if c == classOf[ReachabilityEvent] =>
           reachabilityEvents.runForeach(s.!)
           Behaviors.same
+
+        case other =>
+          throw new UnsupportedOperationException(s"Not handling command [$other]!")
       })
     val events = ClusterEvents(config, subscriptions).take(9).runWith(Sink.seq)
 

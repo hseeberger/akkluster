@@ -55,17 +55,17 @@ lazy val akkluster =
 lazy val library =
   new {
     object Version {
-      val akka          = "2.6.8"
-      val akkaHttp      = "10.2.0"
-      val akkaMgm       = "1.0.8"
+      val akka          = "2.6.10"
+      val akkaHttp      = "10.2.1"
+      val akkaMgm       = "1.0.9"
       val akkaSbr       = "1.1.4"
-      val borer         = "1.6.1"
+      val borer         = "1.6.3"
       val disruptor     = "3.4.2"
-      val log4j         = "2.13.3"
-      val mockito       = "3.4.6"
-      val pureConfig    = "0.13.0"
-      val scalaCheck    = "1.14.3"
-      val mUnit         = "0.7.10"
+      val log4j         = "2.14.0"
+      val mockito       = "3.6.28"
+      val pureConfig    = "0.14.0"
+      val scalaCheck    = "1.15.1"
+      val mUnit         = "0.7.19"
     }
     val akkaActorTestkitTyped    = "com.typesafe.akka"             %% "akka-actor-testkit-typed"          % Version.akka
     val akkaClusterShardingTyped = "com.typesafe.akka"             %% "akka-cluster-sharding-typed"       % Version.akka
@@ -97,7 +97,7 @@ lazy val library =
 
 lazy val commonSettings =
   Seq(
-    scalaVersion := "2.13.3",
+    scalaVersion := "2.13.4",
     organization := "rocks.heikoseeberger",
     organizationName := "Heiko Seeberger",
     startYear := Some(2018),
