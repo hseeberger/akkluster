@@ -55,17 +55,17 @@ lazy val akkluster =
 lazy val library =
   new {
     object Version {
-      val akka          = "2.6.10"
-      val akkaHttp      = "10.2.1"
-      val akkaMgm       = "1.0.9"
+      val akka          = "2.6.13"
+      val akkaHttp      = "10.2.4"
+      val akkaMgm       = "1.0.10"
       val akkaSbr       = "1.1.4"
       val borer         = "1.6.3"
       val disruptor     = "3.4.2"
-      val log4j         = "2.14.0"
-      val mockito       = "3.6.28"
-      val pureConfig    = "0.14.0"
-      val scalaCheck    = "1.15.1"
-      val mUnit         = "0.7.19"
+      val log4j         = "2.14.1"
+      val mockito       = "3.8.0"
+      val pureConfig    = "0.14.1"
+      val scalaCheck    = "1.15.3"
+      val mUnit         = "0.7.22"
     }
     val akkaActorTestkitTyped    = "com.typesafe.akka"             %% "akka-actor-testkit-typed"          % Version.akka
     val akkaClusterShardingTyped = "com.typesafe.akka"             %% "akka-cluster-sharding-typed"       % Version.akka
@@ -97,7 +97,7 @@ lazy val library =
 
 lazy val commonSettings =
   Seq(
-    scalaVersion := "2.13.4",
+    scalaVersion := "2.13.5",
     organization := "rocks.heikoseeberger",
     organizationName := "Heiko Seeberger",
     startYear := Some(2018),
@@ -109,6 +109,8 @@ lazy val commonSettings =
       "-encoding", "UTF-8",
       "-Ywarn-unused:imports",
     ),
+    Compile / packageDoc / publishArtifact := false,
+    Compile / packageSrc / publishArtifact := false,
     testFrameworks += new TestFramework("munit.Framework"),
     scalafmtOnCompile := true,
 )

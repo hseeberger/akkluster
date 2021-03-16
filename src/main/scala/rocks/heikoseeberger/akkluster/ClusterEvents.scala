@@ -29,6 +29,8 @@ import akka.cluster.ClusterEvent.{
   MemberExited,
   MemberJoined,
   MemberLeft,
+  MemberPreparingForShutdown,
+  MemberReadyForShutdown,
   MemberRemoved,
   MemberUp,
   MemberWeaklyUp,
@@ -85,13 +87,15 @@ object ClusterEvents {
 
   private def toClusterEvent(event: MemberEvent) =
     event match {
-      case MemberJoined(m)     => ClusterEvent(m, "joining")
-      case MemberWeaklyUp(m)   => ClusterEvent(m, "weakly-up")
-      case MemberUp(m)         => ClusterEvent(m, "up")
-      case MemberLeft(m)       => ClusterEvent(m, "leaving")
-      case MemberExited(m)     => ClusterEvent(m, "exiting")
-      case MemberDowned(m)     => ClusterEvent(m, "down")
-      case MemberRemoved(m, _) => ClusterEvent(m, "removed")
+      case MemberJoined(m)               => ClusterEvent(m, "joining")
+      case MemberWeaklyUp(m)             => ClusterEvent(m, "weakly-up")
+      case MemberUp(m)                   => ClusterEvent(m, "up")
+      case MemberLeft(m)                 => ClusterEvent(m, "leaving")
+      case MemberExited(m)               => ClusterEvent(m, "exiting")
+      case MemberDowned(m)               => ClusterEvent(m, "down")
+      case MemberRemoved(m, _)           => ClusterEvent(m, "removed")
+      case MemberPreparingForShutdown(m) => ClusterEvent(m, "preparing-for-shutdown")
+      case MemberReadyForShutdown(m)     => ClusterEvent(m, "ready-for-shutdown")
     }
 
   private def toClusterEvent(event: ReachabilityEvent) =

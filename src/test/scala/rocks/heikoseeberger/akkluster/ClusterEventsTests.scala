@@ -29,6 +29,8 @@ import akka.cluster.ClusterEvent.{
   MemberExited,
   MemberJoined,
   MemberLeft,
+  MemberPreparingForShutdown,
+  MemberReadyForShutdown,
   MemberRemoved,
   MemberUp,
   MemberWeaklyUp,
@@ -58,30 +60,6 @@ final class ClusterEventsTests extends ActorTestKitSuite {
   }
 
   test("events") {
-    val (memberEventsQueue, memberEvents) =
-      Source.queue[MemberEvent](1, OverflowStrategy.fail).preMaterialize()
-    val (reachabilityEventsQueue, reachabilityEvents) =
-      Source.queue[ReachabilityEvent](1, OverflowStrategy.fail).preMaterialize()
-    val subscriptions =
-      testKit().spawn(Behaviors.receiveMessage[ClusterStateSubscription] {
-        case Subscribe(s: ActorRef[MemberEvent], c) if c == classOf[MemberEvent] =>
-          memberEvents.runForeach(s.!)
-          Behaviors.same
-
-        case Subscribe(s: ActorRef[ReachabilityEvent], c) if c == classOf[ReachabilityEvent] =>
-          reachabilityEvents.runForeach(s.!)
-          Behaviors.same
-
-        case other =>
-          throw new UnsupportedOperationException(s"Not handling command [$other]!")
-      })
-    val events = ClusterEvents(config, subscriptions).take(9).runWith(Sink.seq)
-
-    val member = Mockito.mock(classOf[Member])
-    Mockito.when(member.address).thenReturn(Address("akka", "test", "127.0.0.1", 25520))
-    Mockito.when(member.status).thenReturn(MemberStatus.Joining)
-    Mockito.when(member.roles).thenReturn(Set.empty)
-
     val expected =
       List(
         ServerSentEvent(
@@ -110,9 +88,41 @@ final class ClusterEventsTests extends ActorTestKitSuite {
         ),
         ServerSentEvent(
           """{"address":"akka://test@127.0.0.1:25520","status":"down","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"preparing-for-shutdown","roles":[]}"""
+        ),
+        ServerSentEvent(
+          """{"address":"akka://test@127.0.0.1:25520","status":"ready-for-shutdown","roles":[]}"""
         )
       )
 
+    val (memberEventsQueue, memberEvents) =
+      Source.queue[MemberEvent](1, OverflowStrategy.fail).preMaterialize()
+    val (reachabilityEventsQueue, reachabilityEvents) =
+      Source.queue[ReachabilityEvent](1, OverflowStrategy.fail).preMaterialize()
+    val subscriptions =
+      testKit().spawn(Behaviors.receiveMessage[ClusterStateSubscription] {
+        case Subscribe(s: ActorRef[MemberEvent], c) if c == classOf[MemberEvent] =>
+          memberEvents.runForeach(s.!)
+          Behaviors.same
+
+        case Subscribe(s: ActorRef[ReachabilityEvent], c) if c == classOf[ReachabilityEvent] =>
+          reachabilityEvents.runForeach(s.!)
+          Behaviors.same
+
+        case other =>
+          throw new UnsupportedOperationException(s"Not handling command [$other]!")
+      })
+    val events =
+      ClusterEvents(config, subscriptions)
+        .take(expected.size)
+        .runWith(Sink.seq)
+
+    val member = Mockito.mock(classOf[Member])
+    Mockito.when(member.address).thenReturn(Address("akka", "test", "127.0.0.1", 25520))
+    Mockito.when(member.roles).thenReturn(Set.empty)
+    Mockito.when(member.status).thenReturn(MemberStatus.Joining)
     for {
       _ <- memberEventsQueue.offer(MemberJoined(member))
       _ = Mockito.when(member.status).thenReturn(MemberStatus.WeaklyUp)
@@ -128,7 +138,11 @@ final class ClusterEventsTests extends ActorTestKitSuite {
       _ = Mockito.when(member.status).thenReturn(MemberStatus.Removed)
       _ <- memberEventsQueue.offer(MemberRemoved(member, MemberStatus.Exiting))
       _ = Mockito.when(member.status).thenReturn(MemberStatus.Down)
-      _  <- memberEventsQueue.offer(MemberDowned(member))
+      _ <- memberEventsQueue.offer(MemberDowned(member))
+      _ = Mockito.when(member.status).thenReturn(MemberStatus.PreparingForShutdown)
+      _ <- memberEventsQueue.offer(MemberPreparingForShutdown(member))
+      _ = Mockito.when(member.status).thenReturn(MemberStatus.ReadyForShutdown)
+      _  <- memberEventsQueue.offer(MemberReadyForShutdown(member))
       es <- events
     } yield assertEquals(es, expected)
   }
