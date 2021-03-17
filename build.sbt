@@ -36,8 +36,8 @@ lazy val akkluster =
       ),
       // Docker settings
       Docker / maintainer := organizationName.value,
-      Docker / version := "latest",
-      dockerBaseImage := "hseeberger/openjdk-iptables:11.0.6",
+//      Docker / version := "latest",
+      dockerBaseImage := "hseeberger/openjdk-iptables:11.0.10",
       dockerExposedPorts := Seq(8080, 8558, 25520),
       dockerRepository := Some("hseeberger"),
       daemonUser in Docker := "root",

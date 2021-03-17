@@ -31,7 +31,10 @@ object Main {
 
   private final val Name = "akkluster"
 
-  private final case class Config(httpServer: HttpServer.Config)
+  private final case class Config(
+      httpServer: HttpServer.Config,
+      clusterEvents: ClusterEvents.Config
+  )
 
   def main(args: Array[String]): Unit = {
     // Always use async logging!
@@ -53,14 +56,17 @@ object Main {
       val cluster = Cluster(context.system)
       val name    = context.system.name
 
-      if (log.isInfoEnabled) log.info(s"$name started and ready to join cluster")
+      if (log.isInfoEnabled)
+        log.info(s"[$name] ready to join cluster")
       cluster.subscriptions ! Subscribe(context.self, classOf[SelfUp])
 
       Behaviors.receive { (context, _) =>
-        if (log.isInfoEnabled) log.info(s"$name joined cluster and is up")
+        if (log.isInfoEnabled)
+          log.info(s"[$name] joined cluster and is up")
         cluster.subscriptions ! Unsubscribe(context.self)
 
-        HttpServer.run(config.httpServer, cluster.subscriptions)(context.system)
+        val clusterEvents = ClusterEvents(config.clusterEvents, cluster.subscriptions)
+        HttpServer.run(config.httpServer, clusterEvents)(context.system)
 
         Behaviors.empty
       }

@@ -16,9 +16,9 @@ spec:
     kind: static
   type: NodePort
   ports:
-  - name: http
-    port: 80
-    targetPort: http
+    - name: http
+      port: 80
+      targetPort: http
 
 ---
 
@@ -58,27 +58,27 @@ spec:
         kind: static
     spec:
       containers:
-      - name: akkluster
-        image: hseeberger/akkluster:latest
-        imagePullPolicy: IfNotPresent
-        args: [
-          "-Dakka.cluster.roles.0=static"
-          # "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
-          # "-Dakka.cluster.downing-provider-class=com.lightbend.akka.sbr.SplitBrainResolverProvider",
-          # "-Dakka.cluster.split-brain-resolver.active-strategy=keep-majority",
-          # "-Dakka.cluster.split-brain-resolver.stable-after=7seconds"
-        ]
-        ports:
-        - name: http
-          containerPort: 8080
-        - name: management
-          containerPort: 8558
-        - name: akka-remote
-          containerPort: 25520
-        securityContext:
-          capabilities:
-            add:
-            - NET_ADMIN
+        - name: akkluster
+          image: hseeberger/akkluster:latest
+          imagePullPolicy: IfNotPresent
+          args: [
+              "-Dakka.cluster.roles.0=static"
+#              "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
+#              "-Dakka.cluster.downing-provider-class=com.lightbend.akka.sbr.SplitBrainResolverProvider",
+#              "-Dakka.cluster.split-brain-resolver.active-strategy=keep-majority",
+#              "-Dakka.cluster.split-brain-resolver.stable-after=7seconds"
+          ]
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: management
+              containerPort: 8558
+            - name: akka-remote
+              containerPort: 25520
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
 
 ---
 
@@ -102,27 +102,27 @@ spec:
         kind: dynamic
     spec:
       containers:
-      - name: akkluster
-        image: hseeberger/akkluster:latest
-        imagePullPolicy: IfNotPresent
-        args: [
-          "-Dakka.cluster.roles.0=dynamic"
-          # "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
-          # "-Dakka.cluster.downing-provider-class=com.lightbend.akka.sbr.SplitBrainResolverProvider",
-          # "-Dakka.cluster.split-brain-resolver.active-strategy=keep-majority",
-          # "-Dakka.cluster.split-brain-resolver.stable-after=7seconds"
-        ]
-        ports:
-        - name: http
-          containerPort: 8080
-        - name: management
-          containerPort: 8558
-        - name: akka-remote
-          containerPort: 25520
-        securityContext:
-          capabilities:
-            add:
-            - NET_ADMIN
+        - name: akkluster
+          image: hseeberger/akkluster:latest
+          imagePullPolicy: IfNotPresent
+          args: [
+              "-Dakka.cluster.roles.0=dynamic"
+#              "-Dakka.cluster.downing-provider-class=rocks.heikoseeberger.akkluster.NaiveDowningProvider"
+#              "-Dakka.cluster.downing-provider-class=com.lightbend.akka.sbr.SplitBrainResolverProvider",
+#              "-Dakka.cluster.split-brain-resolver.active-strategy=keep-majority",
+#              "-Dakka.cluster.split-brain-resolver.stable-after=7seconds"
+          ]
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: management
+              containerPort: 8558
+            - name: akka-remote
+              containerPort: 25520
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
 
 ---
 
@@ -132,9 +132,9 @@ metadata:
   namespace: akkluster
   name: pod-reader
 rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "watch", "list"]
+  - apiGroups: [ "" ]
+    resources: [ "pods" ]
+    verbs: [ "get", "watch", "list" ]
 
 ---
 
@@ -144,8 +144,8 @@ metadata:
   namespace: akkluster
   name: read-pods
 subjects:
-- kind: User
-  name: system:serviceaccount:akkluster:default
+  - kind: User
+    name: system:serviceaccount:akkluster:default
 roleRef:
   kind: Role
   name: pod-reader

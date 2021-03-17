@@ -17,11 +17,14 @@
 package rocks.heikoseeberger.akkluster
 
 import akka.actor.CoordinatedShutdown
-import akka.actor.typed.{ ActorRef, ActorSystem }
-import akka.cluster.typed.ClusterStateSubscription
+import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ StatusCodes, Uri }
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.Http.ServerBinding
+import akka.http.scaladsl.model.sse.ServerSentEvent
+import akka.NotUsed
+import akka.stream.scaladsl.Source
 import org.slf4j.LoggerFactory
 import scala.concurrent.{ Future, Promise }
 import scala.concurrent.duration.FiniteDuration
@@ -29,12 +32,7 @@ import scala.util.{ Failure, Success }
 
 object HttpServer {
 
-  final case class Config(
-      interface: String,
-      port: Int,
-      terminationDeadline: FiniteDuration,
-      clusterEvents: ClusterEvents.Config
-  )
+  final case class Config(interface: String, port: Int, terminationDeadline: FiniteDuration)
 
   final class ReadinessCheck extends (() => Future[Boolean]) {
     override def apply(): Future[Boolean] =
@@ -45,10 +43,9 @@ object HttpServer {
 
   private val ready = Promise[Boolean]()
 
-  def run(
-      config: Config,
-      cluster: ActorRef[ClusterStateSubscription]
-  )(implicit system: ActorSystem[_]): Unit = {
+  def run(config: Config, clusterEvents: Source[ServerSentEvent, NotUsed])(implicit
+      system: ActorSystem[_]
+  ): Unit = {
     import config._
     import system.executionContext
 
@@ -57,21 +54,21 @@ object HttpServer {
 
     Http()
       .newServerAt(interface, port)
-      .bind(route(config, cluster))
+      .bind(route(config, clusterEvents))
       .onComplete {
         case Failure(cause) =>
-          log.error(s"Shutting down, because cannot bind to $interface:$port!", cause)
+          log.error(s"Shutting down, because cannot bind to [$interface:$port]!", cause)
           shutdown.run(BindFailure)
 
-        case Success(binding) =>
+        case Success(binding @ ServerBinding(address)) =>
           if (log.isInfoEnabled)
-            log.info(s"Listening to HTTP connections on ${binding.localAddress}")
+            log.info(s"Listening to HTTP connections on [$address]")
           ready.success(true)
           binding.addToCoordinatedShutdown(terminationDeadline)
       }
   }
 
-  def route(config: Config, cluster: ActorRef[ClusterStateSubscription]): Route = {
+  def route(config: Config, clusterEvents: Source[ServerSentEvent, NotUsed]): Route = {
     import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
     import akka.http.scaladsl.server.Directives._
 
@@ -84,7 +81,7 @@ object HttpServer {
     path("events") {
       get {
         complete {
-          ClusterEvents(config.clusterEvents, cluster)
+          clusterEvents
         }
       }
     }
