@@ -7,21 +7,21 @@ usage() {
 }
 
 while getopts ":hv:" opt; do
-  case ${opt} in
+  case $opt in
   h)
     usage
     exit 0
     ;;
   v)
-    version=${OPTARG}
+    version=$OPTARG
     ;;
   \?)
-    echo "Invalid option: -${opt}" >&2
+    echo "Invalid option: -$opt" >&2
     usage
     exit 1
     ;;
   :)
-    echo "Option -${opt} requires an argument" >&2
+    echo "Option -$opt requires an argument" >&2
     usage
     exit 1
     ;;
@@ -29,19 +29,19 @@ while getopts ":hv:" opt; do
 done
 shift $(($OPTIND - 1))
 
-if [ -z "${version}" ]; then
+if [ -z "$version" ]; then
   version=$(docker images --format "{{.Tag}}" hseeberger/akkluster | sort -r | head -1)
-elif [ -z $(docker images --format "{{.Tag}}" hseeberger/akkluster | grep -x ${version}) ]; then
-  echo "Unknown version: ${version}" >&2
+elif [ -z $(docker images --format "{{.Tag}}" hseeberger/akkluster | grep -x $version) ]; then
+  echo "Unknown version: $version" >&2
   exit 1
 fi
 
-dir=$(pwd)
+current_dir=$(pwd)
 cd $(dirname $0)
 
 cp kustomization.yaml /tmp/
-kustomize edit set image hseeberger/akkluster:${version}
+kustomize edit set image hseeberger/akkluster:$version
 kubectl apply -k .
 
 cp /tmp/kustomization.yaml .
-cd $dir
+cd $current_dir

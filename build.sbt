@@ -15,11 +15,11 @@ inThisBuild(
       "-language:_",
       "-encoding",
       "UTF-8",
-      "-Ywarn-unused:imports"
+      "-Ywarn-unused:imports",
     ),
     testFrameworks += new TestFramework("munit.Framework"),
     scalafmtOnCompile := true,
-    dynverSeparator := "_", // the default `+` is not compatible with docker tags,
+    dynverSeparator := "_", // the default `+` is not compatible with docker tags
   )
 )
 
@@ -78,6 +78,7 @@ lazy val akkluster =
 
 lazy val commonSettings =
   Seq(
+    // Also (automatically) format build definition together with sources
     Compile / scalafmt := {
       val _ = (Compile / scalafmtSbt).value
       (Compile / scalafmt).value
