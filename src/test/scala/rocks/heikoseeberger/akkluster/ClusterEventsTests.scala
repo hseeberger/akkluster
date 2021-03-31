@@ -41,10 +41,10 @@ import akka.cluster.ClusterEvent.{
 import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{ Sink, Source }
-import org.mockito.Mockito
+import org.mockito.IdiomaticMockito
 import scala.concurrent.duration.DurationInt
 
-final class ClusterEventsTests extends ActorTestKitSuite {
+final class ClusterEventsTests extends ActorTestKitSuite with IdiomaticMockito {
   import ClusterEvents._
 
   private val config = Config(42, 42.seconds)
@@ -119,29 +119,29 @@ final class ClusterEventsTests extends ActorTestKitSuite {
         .take(expected.size)
         .runWith(Sink.seq)
 
-    val member = Mockito.mock(classOf[Member])
-    Mockito.when(member.address).thenReturn(Address("akka", "test", "127.0.0.1", 25520))
-    Mockito.when(member.roles).thenReturn(Set.empty)
-    Mockito.when(member.status).thenReturn(MemberStatus.Joining)
+    val member = mock[Member]
+    member.address returns Address("akka", "test", "127.0.0.1", 25520)
+    member.roles returns Set.empty
+    member.status returns MemberStatus.Joining
     for {
       _ <- memberEventsQueue.offer(MemberJoined(member))
-      _ = Mockito.when(member.status).thenReturn(MemberStatus.WeaklyUp)
+      _ = member.status returns MemberStatus.WeaklyUp
       _ <- memberEventsQueue.offer(MemberWeaklyUp(member))
-      _ = Mockito.when(member.status).thenReturn(MemberStatus.Up)
+      _ = member.status returns MemberStatus.Up
       _ <- memberEventsQueue.offer(MemberUp(member))
       _ <- reachabilityEventsQueue.offer(UnreachableMember(member))
       _ <- reachabilityEventsQueue.offer(ReachableMember(member))
-      _ = Mockito.when(member.status).thenReturn(MemberStatus.Leaving)
+      _ = member.status returns MemberStatus.Leaving
       _ <- memberEventsQueue.offer(MemberLeft(member))
-      _ = Mockito.when(member.status).thenReturn(MemberStatus.Exiting)
+      _ = member.status returns MemberStatus.Exiting
       _ <- memberEventsQueue.offer(MemberExited(member))
-      _ = Mockito.when(member.status).thenReturn(MemberStatus.Removed)
+      _ = member.status returns MemberStatus.Removed
       _ <- memberEventsQueue.offer(MemberRemoved(member, MemberStatus.Exiting))
-      _ = Mockito.when(member.status).thenReturn(MemberStatus.Down)
+      _ = member.status returns MemberStatus.Down
       _ <- memberEventsQueue.offer(MemberDowned(member))
-      _ = Mockito.when(member.status).thenReturn(MemberStatus.PreparingForShutdown)
+      _ = member.status returns MemberStatus.PreparingForShutdown
       _ <- memberEventsQueue.offer(MemberPreparingForShutdown(member))
-      _ = Mockito.when(member.status).thenReturn(MemberStatus.ReadyForShutdown)
+      _ = member.status returns MemberStatus.ReadyForShutdown
       _  <- memberEventsQueue.offer(MemberReadyForShutdown(member))
       es <- events
     } yield assertEquals(es, expected)
