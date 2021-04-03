@@ -1,12 +1,11 @@
 function onload() {
-    let selectedMember = d3.select("#selectedMember");
-    let members = new Map();
+    const selectedMember = d3.select("#selectedMember");
+    const members = new Map();
 
     function handleEvent(event) {
         if (event.data !== "") {
             let {address, status, roles} = JSON.parse(event.data);
             let isStatic = roles.includes('static');
-            console.log(address, status, isStatic);
             if (status === "removed") {
                 members.delete(address);
             } else {
@@ -17,29 +16,25 @@ function onload() {
         }
     }
 
-    let events = new EventSource('events');
+    const events = new EventSource('events');
     events.addEventListener("message", handleEvent, false);
 }
 
 function updateCircles(selectedMember, members) {
-    let circles = d3.select("svg").selectAll("circle").data(Array.from(members));
-
-    circles
-        .style("fill", ([, {status}]) => statusToColor(status))
-        .style("stroke-width", ([address, {isStatic}]) => isStatic ? 2 : 0);
-
-    circles.enter()
-        .append("circle")
+    d3.select("svg").selectAll("circle")
+        .data(Array.from(members))
+        .join(
+            enter => enter.append("circle"),
+            update => update,
+            exit => exit.remove()
+        )
         .attr("r", 20)
+        .attr("cx", (_, n) => n * 100 + 30)
         .attr("cy", 60)
-        .attr("cx", (member, n) => n * 100 + 30)
-        .style("stroke", "orange")
         .style("fill", ([, {status}]) => statusToColor(status))
+        .style("stroke", "orange")
         .style("stroke-width", ([, {isStatic}]) => isStatic ? 2 : 0)
-        .on("click", ([address,]) => selectedMember.text(address));
-
-    circles.exit()
-        .remove();
+        .on("click", (_, [address,]) => selectedMember.text(address));
 }
 
 function statusToColor(status) {
