@@ -1,6 +1,7 @@
 # Akka Cluster up and running #
 
-Demo application to visualize the status (up, unreachable, etc.) of the member nodes.
+Demo application to visualize the status (up, unreachable, etc.) of the member nodes of an Akka
+cluster.
 
 # Running locally in sbt
 
@@ -10,7 +11,8 @@ First add an additional loopback address:
 sudo ifconfig lo0 127.0.0.2 add
 ```
 
-Then run an sbt session and execute the command alias (see `build.sbt`) `r0`. Point your browser to [127.0.0.1:8080](http://127.0.0.1:8080). Optionally run `r1` in another sbt session.
+Then run an sbt session and execute the command alias (see `build.sbt`) `r0`. Point your browser to
+[127.0.0.1:8080](http://127.0.0.1:8080). Optionally run `r1` in another sbt session.
 
 # How to make nodes unavailable in Docker
 
