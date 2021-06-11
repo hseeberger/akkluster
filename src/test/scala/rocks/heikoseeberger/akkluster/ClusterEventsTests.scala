@@ -18,7 +18,6 @@ package rocks.heikoseeberger.akkluster
 
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.testkit.typed.FishingOutcome
-import akka.actor.typed.ActorRef
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.Address
 import akka.cluster.{ Member, MemberStatus }
@@ -53,9 +52,9 @@ final class ClusterEventsTests extends ActorTestKitSuite with IdiomaticMockito {
     val subscriptions = TestProbe[ClusterStateSubscription]()
     ClusterEvents(config, subscriptions.ref).runWith(Sink.ignore)
     subscriptions.fishForMessage(3.seconds) {
-      case Subscribe(_, c) if c == classOf[MemberEvent]       => FishingOutcome.Continue
-      case Subscribe(_, c) if c == classOf[ReachabilityEvent] => FishingOutcome.Complete
-      case other                                              => FishingOutcome.Fail(s"Unexpected message: $other")
+      case Subscribe(_, c) if isMemberEvent(c)       => FishingOutcome.Continue
+      case Subscribe(_, c) if isReachabilityEvent(c) => FishingOutcome.Complete
+      case other                                     => FishingOutcome.Fail(s"Unexpected [$other]")
     }
   }
 
@@ -103,11 +102,11 @@ final class ClusterEventsTests extends ActorTestKitSuite with IdiomaticMockito {
       Source.queue[ReachabilityEvent](1, OverflowStrategy.fail).preMaterialize()
     val subscriptions =
       testKit().spawn(Behaviors.receiveMessage[ClusterStateSubscription] {
-        case Subscribe(s: ActorRef[MemberEvent], c) if c == classOf[MemberEvent] =>
+        case Subscribe(s, c) if isMemberEvent(c) =>
           memberEvents.runForeach(s.!)
           Behaviors.same
 
-        case Subscribe(s: ActorRef[ReachabilityEvent], c) if c == classOf[ReachabilityEvent] =>
+        case Subscribe(s, c) if isReachabilityEvent(c) =>
           reachabilityEvents.runForeach(s.!)
           Behaviors.same
 
@@ -146,4 +145,8 @@ final class ClusterEventsTests extends ActorTestKitSuite with IdiomaticMockito {
       es <- events
     } yield assertEquals(es, expected)
   }
+
+  private def isMemberEvent(c: Class[_]) = c.isAssignableFrom(classOf[MemberEvent])
+
+  private def isReachabilityEvent(c: Class[_]) = c.isAssignableFrom(classOf[ReachabilityEvent])
 }

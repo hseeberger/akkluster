@@ -8,7 +8,7 @@ inThisBuild(
     organizationName := "Heiko Seeberger",
     startYear := Some(2018),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
-    scalaVersion := "2.13.5",
+    scalaVersion := "2.13.6",
     scalacOptions ++= Seq(
       "-unchecked",
       "-deprecation",
@@ -57,14 +57,13 @@ lazy val akkluster =
         library.akkaStreamTestkit     % Test,
         library.mUnit                 % Test,
         library.mockitoScala          % Test,
-        library.scalaCheck            % Test,
       ),
       // Docker settings
       dockerBaseImage := "hseeberger/openjdk-iptables:11.0.10",
       dockerRepository := Some("hseeberger"),
       dockerExposedPorts := Seq(8080, 8558, 25520),
-      daemonUser in Docker := "root",
-      daemonUserUid in Docker := None,
+      Docker / daemonUser := "root",
+      Docker / daemonUserUid := None,
       Docker / maintainer := organizationName.value,
       // Publish settings
       Compile / packageDoc / publishArtifact := false, // speed up building Docker images
@@ -118,15 +117,15 @@ lazy val commandAliases =
 lazy val library =
   new {
     object Version {
-      val akka         = "2.6.13"
+      val akka         = "2.6.15"
       val akkaHttp     = "10.2.4"
-      val akkaMgm      = "1.0.10"
+      val akkaMgm      = "1.1.0"
       val akkaSbr      = "1.1.4"
-      val borer        = "1.6.3"
-      val disruptor    = "3.4.2"
+      val borer        = "1.7.2"
+      val disruptor    = "3.4.4"
       val log4j        = "2.14.1"
-      val mockitoScala = "1.16.33"
-      val pureConfig   = "0.14.1"
+      val mockitoScala = "1.16.37"
+      val pureConfig   = "0.16.0"
       val scalaCheck   = "1.15.3"
       val mUnit        = "0.7.23"
     }
@@ -152,6 +151,5 @@ lazy val library =
     val mockitoScala             = "org.mockito"                   %% "mockito-scala"                     % Version.mockitoScala
     val mUnit                    = "org.scalameta"                 %% "munit"                             % Version.mUnit
     val pureConfig               = "com.github.pureconfig"         %% "pureconfig"                        % Version.pureConfig
-    val scalaCheck               = "org.scalacheck"                %% "scalacheck"                        % Version.scalaCheck
     // format: on
   }
