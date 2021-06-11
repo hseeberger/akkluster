@@ -127,7 +127,7 @@ lazy val library =
       val mockitoScala = "1.16.37"
       val pureConfig   = "0.16.0"
       val scalaCheck   = "1.15.3"
-      val mUnit        = "0.7.23"
+      val mUnit        = "0.7.26"
     }
     // format: off
     val akkaActorTestkitTyped    = "com.typesafe.akka"             %% "akka-actor-testkit-typed"          % Version.akka
