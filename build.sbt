@@ -4,9 +4,9 @@
 
 inThisBuild(
   Seq(
-    organization := "rocks.heikoseeberger",
+    organization     := "rocks.heikoseeberger",
     organizationName := "Heiko Seeberger",
-    startYear := Some(2018),
+    startYear        := Some(2018),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
     scalaVersion := "2.13.6",
     scalacOptions ++= Seq(
@@ -19,7 +19,7 @@ inThisBuild(
     ),
     testFrameworks += new TestFramework("munit.Framework"),
     scalafmtOnCompile := true,
-    dynverSeparator := "_", // the default `+` is not compatible with docker tags
+    dynverSeparator   := "_", // the default `+` is not compatible with docker tags
   )
 )
 
@@ -59,12 +59,12 @@ lazy val akkluster =
         library.mockitoScala          % Test,
       ),
       // Docker settings
-      dockerBaseImage := "hseeberger/openjdk-iptables:11.0.10",
-      dockerRepository := Some("hseeberger"),
-      dockerExposedPorts := Seq(8080, 8558, 25520),
-      Docker / daemonUser := "root",
+      dockerBaseImage        := "hseeberger/openjdk-iptables:11.0.10",
+      dockerRepository       := Some("hseeberger"),
+      dockerExposedPorts     := Seq(8080, 8558, 25520),
+      Docker / daemonUser    := "root",
       Docker / daemonUserUid := None,
-      Docker / maintainer := organizationName.value,
+      Docker / maintainer    := organizationName.value,
       // Publish settings
       Compile / packageDoc / publishArtifact := false, // speed up building Docker images
       Compile / packageSrc / publishArtifact := false, // speed up building Docker images
