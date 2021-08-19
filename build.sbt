@@ -117,7 +117,7 @@ lazy val commandAliases =
 lazy val library =
   new {
     object Version {
-      val akka         = "2.6.15"
+      val akka         = "2.6.16"
       val akkaHttp     = "10.2.6"
       val akkaMgm      = "1.1.1"
       val akkaSbr      = "1.1.4"
