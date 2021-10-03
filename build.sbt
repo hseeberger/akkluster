@@ -125,7 +125,7 @@ lazy val library =
       val disruptor    = "3.4.4"
       val log4j        = "2.14.1"
       val mockitoScala = "1.16.42"
-      val pureConfig   = "0.16.0"
+      val pureConfig   = "0.17.0"
       val scalaCheck   = "1.15.3"
       val mUnit        = "0.7.29"
     }
