@@ -119,7 +119,7 @@ lazy val library =
     object Version {
       val akka         = "2.6.18"
       val akkaHttp     = "10.2.7"
-      val akkaMgm      = "1.1.1"
+      val akkaMgm      = "1.1.2"
       val akkaSbr      = "1.1.4"
       val borer        = "1.7.2"
       val disruptor    = "3.4.4"
