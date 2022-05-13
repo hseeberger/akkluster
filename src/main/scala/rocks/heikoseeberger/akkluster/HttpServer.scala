@@ -34,7 +34,7 @@ object HttpServer {
 
   final case class Config(interface: String, port: Int, terminationDeadline: FiniteDuration)
 
-  final class ReadinessCheck extends (() => Future[Boolean]) {
+  final class ReadinessCheck extends () => Future[Boolean] {
     override def apply(): Future[Boolean] =
       ready.future
   }
